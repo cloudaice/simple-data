@@ -4,3 +4,4 @@ lib/
 share/
 src/
 *.pyc
+.env
