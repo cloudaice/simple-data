@@ -5,3 +5,4 @@ share/
 src/
 *.pyc
 .env
+*.swp
