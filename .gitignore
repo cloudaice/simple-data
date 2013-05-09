@@ -6,3 +6,5 @@ src/
 *.pyc
 .env
 *.swp
+demo/
+.anvil/
