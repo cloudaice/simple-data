@@ -80,11 +80,12 @@ class GithubHandler(web.RequestHandler):
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), 'static'),
+    'template_path': os.path.join(os.path.dirname(__file__), 'template'),
     "debug": True
 }
 
 app = web.Application([
-    (r"/", HelloHandler),
+    (r"/", MainHandler),
     (r"/love", LoveHandler),
     (r"/github", GithubHandler),
     (r"/githubpage", GithubPageHandler),
