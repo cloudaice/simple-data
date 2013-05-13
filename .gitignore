@@ -8,6 +8,7 @@ src/
 *.swp
 demo/
 .anvil/
-config.py
 note
 logs/
+config.default
+*.json
