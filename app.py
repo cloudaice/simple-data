@@ -36,6 +36,7 @@ def get_raw_data():
     every 5 seconds will fetch github.com
     """
     global github_data
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
     client = httpclient.AsyncHTTPClient()
     request = TornadoDataRequest("https://api.github.com/gists/4524946")
     resp = yield client.fetch(request)
