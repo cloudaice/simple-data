@@ -54,7 +54,7 @@ class GithubPageHandler(web.RequestHandler):
 class GithubHandler(web.RequestHandler):
     @asynchronous
     @gen.coroutine
-    def get(self):
+    def post(self):
         client = httpclient.AsyncHTTPClient()
         request = TornadoDataRequest("https://api.github.com/gists/4524946")
         resp = yield client.fetch(request)
@@ -69,12 +69,9 @@ class GithubHandler(web.RequestHandler):
         print len(languages_stats)
         users_stats = sorted(users_stats, key=lambda d: d["contributions"] + strong(d["followers"]), reverse=True)
         users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
-        if isinstance(resp, dict):
-            self.set_header('Content-Type', 'application/json; charset=UTF-8')
-            self.write(json.dumps(users_stats, indent=4, separators=(',', ': ')))
-            self.write(json.dumps(languages_stats, indent=4, separators=(',', ': ')))
-        else:
-            self.write("hello world")
+        self.set_header('Content-Type', 'application/json; charset=UTF-8')
+        self.write(json.dumps(users_stats, indent=4, separators=(',', ': ')))
+        #self.write(json.dumps(languages_stats, indent=4, separators=(',', ': ')))
         self.finish()
 
 
