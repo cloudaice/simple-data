@@ -10,7 +10,5 @@ demo/
 .anvil/
 note
 logs/
-config.default
-*.json
+config.py
 logs/
-*.json
