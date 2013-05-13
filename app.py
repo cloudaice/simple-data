@@ -112,6 +112,8 @@ settings = {
     "debug": True
 }
 
+get_raw_data()
+
 app = web.Application([
     (r"/", MainHandler),
     (r"/love", LoveHandler),
@@ -124,5 +126,4 @@ app = web.Application([
 if __name__ == "__main__":
     parse_command_line()
     app.listen(options.port)
-    get_raw_data()
     tornado.ioloop.IOLoop.instance().start()
