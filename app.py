@@ -173,6 +173,12 @@ class MainHandler(web.RequestHandler):
     def get(self):
         self.render("index.html")
 
+settings = {
+    "static_path": os.path.join(os.path.dirname(__file__), 'static'),
+    'template_path': os.path.join(os.path.dirname(__file__), 'template'),
+    "debug": False
+}
+
 
 class AboutHandler(web.RequestHandler):
     @asynchronous
