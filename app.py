@@ -96,7 +96,10 @@ class GithubHandler(web.RequestHandler):
     @gen.coroutine
     def post(self):
         global github_data
-        users_stats = github_data["users_stats"]
+        if 'users_stats' not in github_data:
+            users_stats = []
+        else:
+            users_stats = github_data["users_stats"]
         #languages_stats = github_data["languages_stats"]
         self.set_header('Content-Type', 'application/json; charset=UTF-8')
         self.write(json.dumps(users_stats, indent=4, separators=(',', ': ')))
