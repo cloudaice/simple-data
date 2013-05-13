@@ -15,7 +15,8 @@ $(document).ready(function(){
                 var github_table  = "<table class='table table-striped'><tr>";
                 for (var i in data){
                     github_table += "<td class='solid'>#" + i + "</td>";
-                    github_table += "<td class='solid'>" + data[i]["name"] + "</td>";
+                    github_table += "<td class='solid'>" + "<a href='https://github.com/" + data[i]["login"] + "' target='_blank'>" + data[i]["login"] + "</a>" + "&nbsp(" + data[i]["name"] + ")" + "</td>";
+                    github_table += "<td class='solid'>" + data[i]["language"] + "</td>";
                     github_table += "<td class='solid'>" + data[i]["location"] + "</td>";
                     github_table += "<td class='solid'>" + "<img height='48' width='48' src=" + data[i]["gravatar"] + "/>" + "</td>";
                     github_table +="</tr><tr>";
