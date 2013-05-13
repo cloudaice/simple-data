@@ -68,6 +68,12 @@ class MainHandler(web.RequestHandler):
         self.render("index.html")
 
 
+class AboutHandler(web.RequestHandler):
+    @asynchronous
+    def get(self):
+        self.render("about.html")
+        
+
 class HelloHandler(web.RequestHandler):
     @asynchronous
     def get(self):
@@ -116,6 +122,7 @@ get_raw_data()
 
 app = web.Application([
     (r"/", MainHandler),
+    (r"/about", AboutHandler),
     (r"/love", LoveHandler),
     (r"/github", GithubHandler),
     (r"/githubpage", GithubPageHandler),
