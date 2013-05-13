@@ -19,7 +19,7 @@ define("port", default=8000)
 strong = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
-def loop_call(delta=10 * 1000):
+def loop_call(delta=60 * 1000):
     def wrap_loop(func):
         @wraps(func)
         def wrap_func(*args, **kwargs):
@@ -29,7 +29,7 @@ def loop_call(delta=10 * 1000):
     return wrap_loop
 
 
-@loop_call(5 * 1000)
+@loop_call()
 @gen.coroutine
 def get_raw_data():
     """
@@ -47,8 +47,6 @@ def get_raw_data():
                               client.fetch(TornadoDataRequest(languages_url))]
     users_stats = escape.json_decode(users.body)
     languages_stats = escape.json_decode(languages.body)
-    print len(users_stats)
-    print len(languages_stats)
     users_stats = sorted(users_stats, key=lambda d: d["contributions"] + strong(d["followers"]), reverse=True)
     users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
     github_data["users_stats"] = users_stats
