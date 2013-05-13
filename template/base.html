@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang='en'><html xmlns:wb=“http://open.weibo.com/wb”>
+<head>
+    <title>{% block title %}{% end %}</title>
+    <meta http-equiv='Content-Type' content='text/html'; charset='utf-8'/> <meta http-equiv='Content-Language' content = 'zh-cn'/>
+    <meta name="keywords" content ="github data"/>
+    <meta name="author" content="cloudaice"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="make data simple">
+
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-responsive.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/datepicker.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/base.css">
+    {% block css %} {% end %}
+
+    <style type="text/css">
+
+      /* Sticky footer styles
+      -------------------------------------------------- */
+
+      html,
+      body {
+        height: 100%;
+        /* The html and body elements cannot have any padding or margin. */
+      }
+
+      /* Wrapper for page content to push down footer */
+      #wrap {
+        min-height: 100%;
+        height: auto !important;
+        height: 100%;
+        /* Negative indent footer by it's height */
+        margin: 0 auto -60px;
+      }
+
+      /* Set the fixed height of the footer here */
+      #push,
+      #footer {
+        height: 60px;
+      }
+      #footer {
+        background-color: #f5f5f5;
+      }
+
+      /* Lastly, apply responsive CSS fixes as necessary */
+      @media (max-width: 767px) {
+        #footer {
+          margin-left: -20px;
+          margin-right: -20px;
+          padding-left: 20px;
+          padding-right: 20px;
+        }
+      }
+
+      /* Custom page CSS
+      -------------------------------------------------- */
+      /* Not required for template or sticky footer method. */
+
+      #wrap > .container {
+        padding-top: 60px;
+      }
+      .container .credit {
+        margin: 20px 0;
+      }
+
+      code {
+        font-size: 80%;
+      }
+
+    </style>
+    <!--google analysic-->
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-28805988-2']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+         })();
+     </script>
+</head>
+<body >
+    <div id="wrap">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand"  href="/">忆芸</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav" id="topTab">
+              <li id='top1'><a href="/classroom">我要自习</a></li>
+              <li id='top2'><a href="/curriculum">我要蹭课</a></li>
+              <li id='top3'><a href="/about">关于</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+   <div class="container">
+     <div class= "content">
+     {% block content %}{% end %}
+     </div>
+   </div>
+   <div id="push"></div>
+   </div>
+    <div id="footer">
+      <div class="container">
+          <p class="muted credit">
+          made by<a href="http://cloudaice.com" target="_blank" tilte= "cloudaice">Xiang Chao</a>
+          @ 2012.
+          </p>
+      </div>
+    </div>
+    <script type="text/javascript" src="/static/js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/static/js/base.js"></script>
+    <script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js" type="text/javascript" charset="utf-8"></script>
+    {% block script %}
+    {% end %}
+</body>
+</html>
