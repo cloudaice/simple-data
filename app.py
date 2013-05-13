@@ -1,4 +1,5 @@
 #-*-coding: utf-8-*-
+from math import exp
 import os
 import json
 from tornado import escape
@@ -12,6 +13,7 @@ from tornado.options import parse_command_line, options, define
 
 
 define("port", default=8000)
+strong = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
 class TornadoDataRequest(httpclient.HTTPRequest):
@@ -21,6 +23,11 @@ class TornadoDataRequest(httpclient.HTTPRequest):
         self.auth_username = config.username
         self.auth_password = config.password
         self.user_agent = "Tornado-data"
+
+
+class MainHandler(web.RequestHandler):
+    def get(self):
+        self.render("index.html")
 
 
 class HelloHandler(web.RequestHandler):
@@ -40,7 +47,6 @@ class GithubPageHandler(web.RequestHandler):
         client = httpclient.AsyncHTTPClient()
         request = TornadoDataRequest("https://github.com/cloudaice")
         resp = yield client.fetch(request)
-        #resp = resp.encode("utf-8")
         self.write(resp.body)
         self.finish()
 
@@ -61,6 +67,8 @@ class GithubHandler(web.RequestHandler):
         languages_stats = escape.json_decode(languages.body)
         print len(users_stats)
         print len(languages_stats)
+        users_stats = sorted(users_stats, key=lambda d: d["contributions"] + strong(d["followers"]), reverse=True)
+        users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
         if isinstance(resp, dict):
             self.set_header('Content-Type', 'application/json; charset=UTF-8')
             self.write(json.dumps(users_stats, indent=4, separators=(',', ': ')))
