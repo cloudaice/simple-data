@@ -2,6 +2,7 @@
 from math import exp
 import os
 import json
+import base64
 from tornado import escape
 import tornado.ioloop
 from tornado import web
@@ -104,6 +105,43 @@ class GithubPageHandler(web.RequestHandler):
         self.finish()
 
 
+class GithubCiHandler(web.RequestHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/test.md")
+
+        resp = yield client.fetch(request)
+        resp = escape.json_decode(resp.body)
+        sha = resp['sha']
+        print sha
+        client = httpclient.AsyncHTTPClient()
+        request = httpclient.HTTPRequest(
+            "https://api.github.com/repos/cloudaice/simple-data/contents/test.md",
+            method="PUT",
+            headers={'Content-Type': 'application/json; charset=UTF-8'},
+            auth_username=config.username,
+            auth_password=config.password,
+            user_agent="Tornado-Data",
+            body=json.dumps({
+                "message": "test commit",
+                "content": base64.encodestring("Hello world!!!"),
+                "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
+                "sha": sha
+            })
+        )
+        resp = yield client.fetch(request)
+        if resp.error:
+            print resp.error
+        resp = escape.json_decode(resp.body)
+        if isinstance(resp, dict):
+            self.write(json.dumps(resp, indent=4, separators=(',', ': ')))
+        else:
+            self.write("Failed")
+        self.finish()
+
+
 class GithubHandler(web.RequestHandler):
     @asynchronous
     @gen.coroutine
@@ -133,6 +171,7 @@ app = web.Application([
     (r"/love", LoveHandler),
     (r"/github", GithubHandler),
     (r"/githubpage", GithubPageHandler),
+    (r"/githubci", GithubCiHandler),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ], **settings)
 
