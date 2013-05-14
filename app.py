@@ -50,7 +50,7 @@ def loop_fetch_new_user():
         request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json")
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
-        content = base64.decodestring(resp["content"])  # 解码base64
+        content = base64.b64decode(resp["content"])  # 解码base64
         fetch_new_user_id = escape.json_decode(content)  # 解成dict类型
         print json.dumps(fetch_new_user_id, indent=4, separators=(',', ': '))
     if remote_users_file is None:
@@ -58,8 +58,11 @@ def loop_fetch_new_user():
         request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
-        content = base64.decodestring(resp["content"])
-        remote_users_file = escape.json_decode(content)
+        content = base64.b64decode(resp["content"])
+        try:
+            remote_users_file = escape.json_decode(content)
+        except ValueError:
+            remote_users_file = {}
         print json.dumps(remote_users_file, indent=4, separators=(',', ': '))
     client = httpclient.AsyncHTTPClient()
     fetch_new_user_url = "https://api.github.com/users?since=" + str(fetch_new_user_id["id"])
@@ -89,11 +92,11 @@ def loop_fetch_new_user():
                 }
         print json.dumps(fetch_new_user_id, indent=4, separators=(',', ': '))
         tornado.ioloop.IOLoop.instance().add_timeout(
-            datetime.timedelta(milliseconds=1 * 1000),
+            datetime.timedelta(milliseconds=2 * 1000),
             loop_fetch_new_user)
 
 
-@loop_call(5 * 1000)
+@loop_call(30 * 1000)
 @gen.coroutine
 def commit_fetch_new_user():
     global remote_users_file
@@ -115,7 +118,7 @@ def commit_fetch_new_user():
             user_agent="Tornado-Data",
             body=json.dumps({
                 "message": "update users.json",
-                "content": base64.encodestring(
+                "content": base64.b64encode(
                     json.dumps(
                         remote_users_file,
                         indent=4,
@@ -127,6 +130,7 @@ def commit_fetch_new_user():
             })
         )
         resp = yield client.fetch(request)
+        print "resp return"
         if resp.error:
             print resp.error
         resp = escape.json_decode(resp.body)
@@ -136,6 +140,7 @@ def commit_fetch_new_user():
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
         sha = resp["sha"]
+        print sha
         client = httpclient.AsyncHTTPClient()
         request = httpclient.HTTPRequest(
             "https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json",
@@ -146,7 +151,7 @@ def commit_fetch_new_user():
             user_agent="Tornado-Data",
             body=json.dumps({
                 "message": "update fetch_new_user_id.json",
-                "content": base64.encodestring(
+                "content": base64.b64encode(
                     json.dumps(
                         fetch_new_user_id,
                         indent=4,
@@ -248,23 +253,30 @@ class GithubCiHandler(web.RequestHandler):
     @asynchronous
     @gen.coroutine
     def get(self):
+        global remote_users_file
         client = httpclient.AsyncHTTPClient()
-        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/test.md")
-
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
         sha = resp['sha']
+        print "sha", sha
         client = httpclient.AsyncHTTPClient()
         request = httpclient.HTTPRequest(
-            "https://api.github.com/repos/cloudaice/simple-data/contents/test.md",
+            "https://api.github.com/repos/cloudaice/simple-data/contents/users.json",
             method="PUT",
             headers={'Content-Type': 'application/json; charset=UTF-8'},
             auth_username=config.username,
             auth_password=config.password,
             user_agent="Tornado-Data",
             body=json.dumps({
-                "message": "test commit",
-                "content": base64.encodestring("Hello world!!!"),
+                "message": "update users.json",
+                "content": base64.b64encode(
+                    json.dumps(
+                        remote_users_file,
+                        indent=4,
+                        separators=(',', ': ')
+                    )
+                ),
                 "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
                 "sha": sha
             })
