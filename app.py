@@ -16,6 +16,9 @@ import datetime
 
 
 github_data = {}
+fetch_user_id = None
+fetch_new_user_id = None
+remote_users_file = None
 define("port", default=8000)
 strong = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
@@ -37,7 +40,131 @@ def loop_call(delta=60 * 1000):
     return wrap_loop
 
 
-@loop_call()
+@gen.coroutine
+def loop_fetch_new_user():
+    global fetch_new_user_id
+    global remote_users_file
+    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+    if fetch_new_user_id is None:
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json")
+        resp = yield client.fetch(request)
+        resp = escape.json_decode(resp.body)
+        content = base64.decodestring(resp["content"])  # 解码base64
+        fetch_new_user_id = escape.json_decode(content)  # 解成dict类型
+        print json.dumps(fetch_new_user_id, indent=4, separators=(',', ': '))
+    if remote_users_file is None:
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
+        resp = yield client.fetch(request)
+        resp = escape.json_decode(resp.body)
+        content = base64.decodestring(resp["content"])
+        remote_users_file = escape.json_decode(content)
+        print json.dumps(remote_users_file, indent=4, separators=(',', ': '))
+    client = httpclient.AsyncHTTPClient()
+    fetch_new_user_url = "https://api.github.com/users?since=" + str(fetch_new_user_id["id"])
+    request = TornadoDataRequest(fetch_new_user_url)
+    resp = yield client.fetch(request)
+    users_json = escape.json_decode(resp.body)
+    print json.dumps(users_json[-1], indent=4, separators=(', ', ': '))
+    if users_json == []:
+        print "no users_json"
+        tornado.ioloop.IOLoop.instance().add_timeout(
+            datetime.timedelta(milliseconds=3600 * 1000),
+            loop_fetch_new_user)
+    else:
+        if fetch_new_user_id["id"] < users_json[-1]["id"]:
+            fetch_new_user_id["id"] = users_json[-1]["id"]
+        for user in users_json:
+            if user["id"] not in remote_users_file:
+                remote_users_file[user["id"]] = {
+                    "login": user["login"],
+                    "id": user["id"],
+                    "gravatar": user["avatar_url"],
+                    "name": "",
+                    "location": "",
+                    "followers": 0,
+                    "contributions": 0,
+                    "activity": 1
+                }
+        print json.dumps(fetch_new_user_id, indent=4, separators=(',', ': '))
+        tornado.ioloop.IOLoop.instance().add_timeout(
+            datetime.timedelta(milliseconds=1 * 1000),
+            loop_fetch_new_user)
+
+
+@loop_call(5 * 1000)
+@gen.coroutine
+def commit_fetch_new_user():
+    global remote_users_file
+    global fetch_new_user_id
+    if remote_users_file and fetch_new_user_id:
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
+        resp = yield client.fetch(request)
+        resp = escape.json_decode(resp.body)
+        sha = resp["sha"]
+        print sha
+        client = httpclient.AsyncHTTPClient()
+        request = httpclient.HTTPRequest(
+            "https://api.github.com/repos/cloudaice/simple-data/contents/users.json",
+            method="PUT",
+            headers={'Content-Type': 'application/json; charset=UTF-8'},
+            auth_username=config.username,
+            auth_password=config.password,
+            user_agent="Tornado-Data",
+            body=json.dumps({
+                "message": "update users.json",
+                "content": base64.encodestring(
+                    json.dumps(
+                        remote_users_file,
+                        indent=4,
+                        separators=(',', ': ')
+                    )
+                ),
+                "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
+                "sha": sha
+            })
+        )
+        resp = yield client.fetch(request)
+        if resp.error:
+            print resp.error
+        resp = escape.json_decode(resp.body)
+        print json.dumps(resp, indent=4, separators=(',', ': '))
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json")
+        resp = yield client.fetch(request)
+        resp = escape.json_decode(resp.body)
+        sha = resp["sha"]
+        client = httpclient.AsyncHTTPClient()
+        request = httpclient.HTTPRequest(
+            "https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json",
+            method="PUT",
+            headers={'Content-Type': 'application/json; charset=UTF-8'},
+            auth_username=config.username,
+            auth_password=config.password,
+            user_agent="Tornado-Data",
+            body=json.dumps({
+                "message": "update fetch_new_user_id.json",
+                "content": base64.encodestring(
+                    json.dumps(
+                        fetch_new_user_id,
+                        indent=4,
+                        separators=(',', ': ')
+                    )
+                ),
+                "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
+                "sha": sha
+            })
+        )
+        resp = yield client.fetch(request)
+        if resp.error:
+            print resp.error
+        resp = escape.json_decode(resp.body)
+        print json.dumps(resp, indent=4, separators=(',', ': '))
+
+    
+@loop_call(5 * 1000)
 @gen.coroutine
 def get_raw_data():
     """
@@ -105,6 +232,18 @@ class GithubPageHandler(web.RequestHandler):
         self.finish()
 
 
+class FetchUserHandler(web.RequestHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        client = httpclient.AsyncHTTPClient()
+        request = TornadoDataRequest("https://github.com/users/cloudaice/contributions_calendar_data")
+        resp = yield client.fetch(request)
+        print resp.headers
+        self.write(resp.body)
+        self.finish()
+
+
 class GithubCiHandler(web.RequestHandler):
     @asynchronous
     @gen.coroutine
@@ -115,7 +254,6 @@ class GithubCiHandler(web.RequestHandler):
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
         sha = resp['sha']
-        print sha
         client = httpclient.AsyncHTTPClient()
         request = httpclient.HTTPRequest(
             "https://api.github.com/repos/cloudaice/simple-data/contents/test.md",
@@ -164,6 +302,8 @@ settings = {
 }
 
 get_raw_data()
+loop_fetch_new_user()
+commit_fetch_new_user()
 
 app = web.Application([
     (r"/", MainHandler),
@@ -172,6 +312,7 @@ app = web.Application([
     (r"/github", GithubHandler),
     (r"/githubpage", GithubPageHandler),
     (r"/githubci", GithubCiHandler),
+    (r"/user", FetchUserHandler),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ], **settings)
 
