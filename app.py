@@ -19,6 +19,13 @@ define("port", default=8000)
 strong = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
+def searchpage(p):
+    if p == 1:
+        return "https://github.com/search?q=location:china&s=followers&type=Users"
+    else:
+        return "https://github.com/search?p=" + str(p) + "&q=location:china&s=followers&type=Users"
+
+
 def loop_call(delta=60 * 1000):
     def wrap_loop(func):
         @wraps(func)
@@ -91,7 +98,7 @@ class GithubPageHandler(web.RequestHandler):
     @gen.coroutine
     def get(self):
         client = httpclient.AsyncHTTPClient()
-        request = TornadoDataRequest("https://github.com/cloudaice")
+        request = TornadoDataRequest(searchpage(2))
         resp = yield client.fetch(request)
         self.write(resp.body)
         self.finish()
