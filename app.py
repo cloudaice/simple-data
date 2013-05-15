@@ -2,17 +2,17 @@
 from math import exp
 import os
 import json
+import datetime
 import base64
 from tornado import escape
-import tornado.ioloop
 from tornado import web
 from tornado import gen
 from tornado import httpclient
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, define
-import config
 from functools import wraps
-import datetime
+import tornado.ioloop
+import config
 
 
 github_data = {}
@@ -20,7 +20,7 @@ fetch_user_id = None
 fetch_new_user_id = None
 remote_users_file = None
 define("port", default=8000)
-strong = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
+formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
 def searchpage(p):
@@ -187,7 +187,7 @@ def get_raw_data():
                               client.fetch(TornadoDataRequest(languages_url))]
     users_stats = escape.json_decode(users.body)
     languages_stats = escape.json_decode(languages.body)
-    users_stats = sorted(users_stats, key=lambda d: d["contributions"] + strong(d["followers"]), reverse=True)
+    users_stats = sorted(users_stats, key=lambda d: d["contributions"] + formula(d["followers"]), reverse=True)
     users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
     github_data["users_stats"] = users_stats
     github_data["languages_stats"] = languages_stats
