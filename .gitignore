@@ -10,3 +10,4 @@ demo/
 .anvil/
 config.py
 note
+logs/
