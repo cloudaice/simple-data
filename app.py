@@ -9,12 +9,14 @@ from tornado import escape
 from tornado import web
 from tornado import gen
 from tornado import httpclient
+from tornado.httpclient import HTTPError
 from tornado.httpserver import HTTPServer
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 from functools import wraps
 import tornado.ioloop
 import tornado.log
+from addr import searchpage
 #import config
 
 
@@ -23,13 +25,6 @@ parse_config_file("config.py")
 
 formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 logger = logging.getLogger("tornado-data")
-
-
-def searchpage(p):
-    if p == 1:
-        return "https://github.com/search?q=location:china&s=followers&type=Users"
-    else:
-        return "https://github.com/search?p=" + str(p) + "&q=location:china&s=followers&type=Users"
 
 
 def loop_call(delta=60 * 1000):
@@ -72,11 +67,13 @@ class BaseHandler(web.RequestHandler):
 
     def prepare(self):
         """do something before request comming"""
-        logger.debug(self.request)
+        #logger.debug(self.request)
+        pass
 
     def on_finish(self):
         """do something after response to client like logging"""
-        logger.debug("finish request.")
+        #logger.debug("finish request.")
+        pass
 
 
 class TornadoDataRequest(httpclient.HTTPRequest):
@@ -86,6 +83,14 @@ class TornadoDataRequest(httpclient.HTTPRequest):
         self.auth_username = options.username
         self.auth_password = options.password
         self.user_agent = "Tornado-data"
+
+
+@gen.coroutine
+def GetPage(url):
+    client = httpclient.AsyncHTTPClient()
+    request = TornadoDataRequest(url)
+    response = yield client.fetch(request)
+    raise gen.Return(response)
 
 
 class MainHandler(web.RequestHandler):
@@ -130,7 +135,6 @@ class FetchUserHandler(web.RequestHandler):
         client = httpclient.AsyncHTTPClient()
         request = TornadoDataRequest("https://github.com/users/cloudaice/contributions_calendar_data")
         resp = yield client.fetch(request)
-        print resp.headers
         self.write(resp.body)
         self.finish()
 
@@ -140,15 +144,21 @@ class GithubCiHandler(web.RequestHandler):
     @gen.coroutine
     def get(self):
         global remote_users_file
-        client = httpclient.AsyncHTTPClient()
-        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
-        resp = yield client.fetch(request)
+        #client = httpclient.AsyncHTTPClient()
+        #request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/test1.md")
+        #future = client.fetch(request)
+        try:
+            resp = yield GetPage("https://api.github.com/repos/cloudaice/simple-data/contents/test1.md")
+        except HTTPError, e:
+            if e.code == "404":
+                pass  # Create this file
+            else:
+                raise e
         resp = escape.json_decode(resp.body)
         sha = resp['sha']
-        print "sha", sha
         client = httpclient.AsyncHTTPClient()
         request = httpclient.HTTPRequest(
-            "https://api.github.com/repos/cloudaice/simple-data/contents/users.json",
+            "https://api.github.com/repos/cloudaice/simple-data/contents/test.md",
             method="PUT",
             headers={'Content-Type': 'application/json; charset=UTF-8'},
             auth_username=options.username,
@@ -158,7 +168,7 @@ class GithubCiHandler(web.RequestHandler):
                 "message": "update users.json",
                 "content": base64.b64encode(
                     json.dumps(
-                        #remote_users_file,
+                        {"name": "cloudaice", "type": "test"},
                         indent=4,
                         separators=(',', ': ')
                     )
