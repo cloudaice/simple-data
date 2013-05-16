@@ -9,8 +9,9 @@ from tornado import escape
 from tornado import web
 from tornado import gen
 from tornado import httpclient
+from tornado.httpserver import HTTPServer
 from tornado.web import asynchronous
-from tornado.options import parse_command_line, options, define, parse_config_file
+from tornado.options import parse_command_line, options, parse_config_file
 from functools import wraps
 import tornado.ioloop
 import tornado.log
@@ -18,23 +19,10 @@ import tornado.log
 
 
 github_data = {}
-define("port", default=8000)
 parse_config_file("config.py")
+
 formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 logger = logging.getLogger("tornado-data")
-
-
-class BaseHandler(web.RequestHandler):
-    def __init__(self, *args, **kwargs):
-        super(BaseHandler, self).__init__(*args, **kwargs)
-
-    def prepare(self):
-        """do something before request comming"""
-        pass
-
-    def on_finish(self):
-        """do something after response to client like logging"""
-        pass
 
 
 def searchpage(p):
@@ -76,6 +64,19 @@ def get_raw_data():
     users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
     github_data["users_stats"] = users_stats
     github_data["languages_stats"] = languages_stats
+
+
+class BaseHandler(web.RequestHandler):
+    def __init__(self, *args, **kwargs):
+        super(BaseHandler, self).__init__(*args, **kwargs)
+
+    def prepare(self):
+        """do something before request comming"""
+        logger.debug(self.request)
+
+    def on_finish(self):
+        """do something after response to client like logging"""
+        logger.debug("finish request.")
 
 
 class TornadoDataRequest(httpclient.HTTPRequest):
@@ -192,25 +193,27 @@ class GithubHandler(web.RequestHandler):
         self.finish()
 
 
-settings = {
-    "static_path": os.path.join(os.path.dirname(__file__), 'static'),
-    'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-    "debug": True
-}
+class Application(web.Application):
+    def __init__(self, *arhs):
+        settings = {
+            "static_path": os.path.join(os.path.dirname(__file__), 'static'),
+            'template_path': os.path.join(os.path.dirname(__file__), 'template'),
+            "debug": True
+        }
 
-get_raw_data()
+        handlers = [
+            (r"/", MainHandler),
+            (r"/about", AboutHandler),
+            (r"/love", LoveHandler),
+            (r"/github", GithubHandler),
+            (r"/githubpage", GithubPageHandler),
+            (r"/githubci", GithubCiHandler),
+            (r"/user", FetchUserHandler),
+            (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
+        ]
 
-app = web.Application([
-    (r"/", MainHandler),
-    (r"/about", AboutHandler),
-    (r"/love", LoveHandler),
-    (r"/github", GithubHandler),
-    (r"/githubpage", GithubPageHandler),
-    (r"/githubci", GithubCiHandler),
-    (r"/user", FetchUserHandler),
-    (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
-], **settings)
-
+        web.Application.__init__(self, handlers, **settings)  # 这里不可以使用`super(Application, self)`
+        
 
 if __name__ == "__main__":
     parse_command_line()
@@ -218,5 +221,8 @@ if __name__ == "__main__":
     logger.error("error")
     logger.info("info")
     logger.warning("warning")
+    get_raw_data()
+
+    app = HTTPServer(Application())
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
