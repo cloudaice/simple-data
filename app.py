@@ -11,7 +11,6 @@ from tornado import gen
 from tornado import httpclient
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, define, parse_config_file
-from tornado.log import access_log, app_log, gen_log
 from functools import wraps
 import tornado.ioloop
 import tornado.log
@@ -22,11 +21,7 @@ github_data = {}
 define("port", default=8000)
 parse_config_file("config.py")
 formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-access_log.info("hello world")
-gen_log.info("hello world")
-app_log.info("hello world")
+logger = logging.getLogger("tornado-data")
 
 
 class BaseHandler(web.RequestHandler):
@@ -219,5 +214,9 @@ app = web.Application([
 
 if __name__ == "__main__":
     parse_command_line()
+    logger.debug("debug")
+    logger.error("error")
+    logger.info("info")
+    logger.warning("warning")
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()

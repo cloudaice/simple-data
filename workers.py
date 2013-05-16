@@ -166,4 +166,4 @@ def commit_fetch_new_user():
 if __name__ == "__main__":
     loop_fetch_new_user()
     commit_fetch_new_user()
-    tornado.ioloop.IOLoop.instance().start() 
+    tornado.ioloop.IOLoop.instance().start()
