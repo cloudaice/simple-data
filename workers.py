@@ -5,6 +5,8 @@ import base64
 from tornado import escape
 from tornado import gen
 from tornado import httpclient
+from tornado.httpclient import HTTPError
+from tornado.httpclient import AsyncHTTPClient
 from tornado.options import options, parse_config_file
 from functools import wraps
 import tornado.ioloop
@@ -14,14 +16,18 @@ parse_config_file("config.py")
 fetch_user_id = None
 fetch_new_user_id = None
 remote_users_file = None
+AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
 class TornadoDataRequest(httpclient.HTTPRequest):
     def __init__(self, url, **kwargs):
         super(TornadoDataRequest, self).__init__(url, **kwargs)
-        self.method = "GET"
         self.auth_username = options.username
         self.auth_password = options.password
+        self.headers = {
+            'Content-Type': 'application/json; charset=UTF-8'
+        },
+        self.headers = {}
         self.user_agent = "Tornado-data"
 
 
@@ -36,22 +42,45 @@ def loop_call(delta=60 * 1000):
 
 
 @gen.coroutine
+def GetPage(url):
+    client = AsyncHTTPClient()
+    request = TornadoDataRequest(url, method='GET')
+    response = yield client.fetch(request)
+    raise gen.Return(response)
+
+
+@gen.coroutine
+def PutPage(url, body):
+    client = AsyncHTTPClient()
+    request = TornadoDataRequest(url, method='PUT', body=body)
+    response = yield client.fetch(request)
+    raise gen.Return(response)
+
+    
+@gen.coroutine
 def loop_fetch_new_user():
     global fetch_new_user_id
     global remote_users_file
-    httpclient.AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
     if fetch_new_user_id is None:
-        client = httpclient.AsyncHTTPClient()
-        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json")
-        resp = yield client.fetch(request)
+        try:
+            resp = yield GetPage(options.fetch_new_user_id_url)  # should do some error process
+        except HTTPError, e:
+            options.logger.error("fetch new user id error", e.code, e.message)
+            raise e
         resp = escape.json_decode(resp.body)
         content = base64.b64decode(resp["content"])  # 解码base64
-        fetch_new_user_id = escape.json_decode(content)  # 解成dict类型
-        print json.dumps(fetch_new_user_id, indent=4, separators=(',', ': '))
+        try:
+            fetch_new_user_id = escape.json_decode(content)  # 解成dict类型
+        except ValueError:
+            options.logger.warning("decode fetch_new_user_id error")
+            fetch_new_user_id = {"id": 0}
+        options.logger.info(json.dumps(fetch_new_user_id, indent=4, separators=(',', ': ')))
     if remote_users_file is None:
-        client = httpclient.AsyncHTTPClient()
-        request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
-        resp = yield client.fetch(request)
+        try:
+            resp = yield GetPage(options.users_url)
+        except HTTPError, e:
+            options.logger.error("fetch users error", e.code, e.message)
+            raise e
         resp = escape.json_decode(resp.body)
         content = base64.b64decode(resp["content"])
         try:
@@ -59,7 +88,7 @@ def loop_fetch_new_user():
         except ValueError:
             remote_users_file = {}
         print json.dumps(remote_users_file, indent=4, separators=(',', ': '))
-    client = httpclient.AsyncHTTPClient()
+    client = AsyncHTTPClient()
     fetch_new_user_url = "https://api.github.com/users?since=" + str(fetch_new_user_id["id"])
     request = TornadoDataRequest(fetch_new_user_url)
     resp = yield client.fetch(request)
@@ -97,13 +126,13 @@ def commit_fetch_new_user():
     global remote_users_file
     global fetch_new_user_id
     if remote_users_file and fetch_new_user_id:
-        client = httpclient.AsyncHTTPClient()
+        client = AsyncHTTPClient()
         request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/users.json")
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
         sha = resp["sha"]
         print sha
-        client = httpclient.AsyncHTTPClient()
+        client = AsyncHTTPClient()
         request = httpclient.HTTPRequest(
             "https://api.github.com/repos/cloudaice/simple-data/contents/users.json",
             method="PUT",
@@ -130,13 +159,13 @@ def commit_fetch_new_user():
             print resp.error
         resp = escape.json_decode(resp.body)
         print json.dumps(resp, indent=4, separators=(',', ': '))
-        client = httpclient.AsyncHTTPClient()
+        client = AsyncHTTPClient()
         request = TornadoDataRequest("https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json")
         resp = yield client.fetch(request)
         resp = escape.json_decode(resp.body)
         sha = resp["sha"]
         print sha
-        client = httpclient.AsyncHTTPClient()
+        client = AsyncHTTPClient()
         request = httpclient.HTTPRequest(
             "https://api.github.com/repos/cloudaice/simple-data/contents/fetch_new_user_id.json",
             method="PUT",
