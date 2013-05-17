@@ -8,7 +8,6 @@ from tornado import escape
 from tornado import web
 from tornado import gen
 from tornado import httpclient
-from tornado.httpserver import HTTPServer
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
@@ -229,6 +228,6 @@ get_raw_data()
 
 if __name__ == "__main__":
     parse_command_line()
-    app = HTTPServer(Application())
+    app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
