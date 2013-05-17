@@ -143,7 +143,8 @@ class GithubCiHandler(ApiHandler):
                 resp = escape.json_decode(resp.body)
                 if isinstance(resp, dict):
                     self.write(json.dumps(resp, indent=4, separators=(',', ': ')))
-                    options.logger.info(json.dumps(resp, indent=4, separators=(',', ': ')))
+                    options.logger.info("file %s size %d commit success" %
+                                        (resp["content"]["name"], resp["content"]["size"]))
                 else:
                     self.write("Failed")
             else:
