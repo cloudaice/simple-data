@@ -100,7 +100,7 @@ def loop_fetch_new_user():
                         "activity": 1
                     }
             tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timedelta(milliseconds=2 * 1000),
+                datetime.timedelta(milliseconds=1 * 1000),
                 loop_fetch_new_user)
     else:
         options.logger.error("fetch users error %d %r" % (resp.code, resp.message))
@@ -109,7 +109,7 @@ def loop_fetch_new_user():
             loop_fetch_new_user)
 
 
-@sync_loop_call(30 * 1000)
+@sync_loop_call(60 * 1000)
 @gen.coroutine
 def commit_fetch_new_user():
     global remote_users_file
