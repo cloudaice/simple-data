@@ -86,7 +86,7 @@ def loop_fetch_new_user():
         else:
             if fetch_new_user_id["id"] < users_json[-1]["id"]:
                 fetch_new_user_id["id"] = users_json[-1]["id"]
-                options.logger.info("new user id is %d" % fetch_new_user_id["id"])
+                options.logger.info("new user_id is %d" % fetch_new_user_id["id"])
             for user in users_json:
                 if user["id"] not in remote_users_file:
                     remote_users_file[user["id"]] = {
@@ -109,7 +109,7 @@ def loop_fetch_new_user():
             loop_fetch_new_user)
 
 
-@sync_loop_call(10 * 1000)
+@sync_loop_call(30 * 1000)
 @gen.coroutine
 def commit_fetch_new_user():
     global remote_users_file
@@ -117,35 +117,25 @@ def commit_fetch_new_user():
     if remote_users_file and fetch_new_user_id:
         resp = yield GetPage(options.fetch_new_user_id_url)
         if resp.code == 200:
-            print "fetch new user id ok"
-            try:
-                resp = escape.json_decode(resp.body)
-            except Exception, e:
-                print e
+            resp = escape.json_decode(resp.body)
             try:
                 content = base64.b64decode(resp["content"])
-            except Exception, e:
-                print e
-            print "content is ok"
+            except TypeError, e:
+                options.logger.error("base64 decode fetch_new_user_id error")
             try:
                 old_fetch_new_user_id = escape.json_decode(content)
-                print old_fetch_new_user_id
             except ValueError:
-                options.logger.error("decode fetch new user id error")
-                old_fetch_new_user_id = {"id": fetch_new_user_id["id"] - 5001}
+                options.logger.error("json decode fetch_new_user_id error")
+                old_fetch_new_user_id = {
+                    "id": fetch_new_user_id["id"] - options.update_new_user_interval - 1
+                }
         else:
             options.logger.error("when fetch new user id error %d, %r" %
                                  (resp.code, resp.message))
-            old_fetch_new_user_id = {"id": fetch_new_user_id["id"] - 5001}
-
-        if fetch_new_user_id["id"] - old_fetch_new_user_id["id"] > 200:
-            print "start commit"
-            try:
-                content = zlib.compress(json.dumps(remote_users_file))
-                print "zlib is ok"
-            except Exception, e:
-                print e
-            print "update users file on %d" % fetch_new_user_id["id"]
+            old_fetch_new_user_id = {
+                "id": fetch_new_user_id["id"] - options.update_new_user_interval - 1
+            }
+        if fetch_new_user_id["id"] - old_fetch_new_user_id["id"] > options.update_new_user_interval:
             try:
                 body = json.dumps({
                     "description": "update users file on %d" % fetch_new_user_id["id"],
@@ -157,20 +147,14 @@ def commit_fetch_new_user():
                         }
                     }
                 })
-                print "body"
             except Exception, e:
-                print e
-            print 'patch...'
+                options.logger.error("process body error %d %s" % (e.code, e.message))
             resp = yield PatchPage(options.users_url, body)
             if resp.code == 200:
-                print 'patched'
-                try:
-                    resp = escape.json_decode(resp.body)
-                except Exception, e:
-                    print e
-                #options.logger.info(json.dumps(resp, indent=4, separators=(',', ':')))
+                resp = escape.json_decode(resp.body)
                 options.logger.info("file %s size %d commit success" %
-                                    (resp["files"]["users"]["filename"], resp["files"]["users"]["size"]))
+                                    (resp["files"]["users"]["filename"],
+                                     resp["files"]["users"]["size"]))
                 resp = yield GetPage(options.fetch_new_user_id_url)
                 if resp.code == 200:
                     resp = escape.json_decode(resp.body)
@@ -202,8 +186,10 @@ def commit_fetch_new_user():
                 options.logger.error("update users file error %d, %r" %
                                      (resp.code, resp.message))
         else:
-            options.logger.info("new user id %d is not 5000 more than old user id %d" %
-                                (fetch_new_user_id["id"], old_fetch_new_user_id["id"]))
+            options.logger.info("new_user_id:%d - %d less than %d" %
+                                (fetch_new_user_id["id"],
+                                 old_fetch_new_user_id["id"],
+                                 options.update_new_user_interval))
     else:
         options.logger.info("remote_user_file and fetch_new_user_id has not ready")
     raise gen.Return()
