@@ -203,31 +203,27 @@ class AboutHandler(web.RequestHandler):
         self.render("about.html")
         
 
-class Application(web.Application):
-    def __init__(self, *arhs):
-        settings = {
-            "static_path": os.path.join(os.path.dirname(__file__), 'static'),
-            'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-            "debug": False
-        }
+settings = {
+    "static_path": os.path.join(os.path.dirname(__file__), 'static'),
+    'template_path': os.path.join(os.path.dirname(__file__), 'template'),
+    "debug": False
+}
 
-        handlers = [
-            (r"/", MainHandler),
-            (r"/about", AboutHandler),
-            (r"/github", GithubHandler),
-            (r"/githubpage", GithubPageHandler),
-            #(r"/githubci", GithubCiHandler),
-            #(r"/githubei", GithubEiHandler),
-            (r"/user", FetchUserHandler),
-            (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
-        ]
+handlers = [
+    (r"/", MainHandler),
+    (r"/about", AboutHandler),
+    (r"/github", GithubHandler),
+    (r"/githubpage", GithubPageHandler),
+    #(r"/githubci", GithubCiHandler),
+    #(r"/githubei", GithubEiHandler),
+    (r"/user", FetchUserHandler),
+    (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
+]
 
-        web.Application.__init__(self, handlers, **settings)  # 这里不可以使用`super(Application, self)`
-        
+app = web.Application(handlers, **settings)
 get_raw_data()
 
 if __name__ == "__main__":
     parse_command_line()
-    app = Application()
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
