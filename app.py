@@ -33,8 +33,9 @@ def get_raw_data():
     global github_data
     resp = yield GetPage("https://api.github.com/gists/4524946")
     if resp.code == 200:
-        options.logger.info("limit: %d" % resp.headers["X-RateLimit-Remaining"])
         options.logger.info("fetch gists sunccess")
+        if "X-RateLimit-Remaining" in resp.headers:
+            options.logger.info("limit: %r" % resp.headers["X-RateLimit-Remaining"])
         resp = escape.json_decode(resp.body)
         users_url = resp["files"]["github-users-stats.json"]["raw_url"]
         languages_url = resp["files"]["github-languages-stats.json"]["raw_url"]
