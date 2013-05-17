@@ -180,9 +180,10 @@ class GithubEiHandler(ApiHandler):
                 }
             }
         })
-        resp = yield PatchPage(options.users_url, body) if resp.code == 200:
+        resp = yield PatchPage(options.users_url, body)
+        if resp.code == 200:
             resp = escape.json_decode(resp.body)
-            self.write(json.dumps(resp, indent=4, separators=(',',':')))
+            self.write(json.dumps(resp, indent=4, separators=(',', ':')))
         else:
             options.logger.error("update gist error")
             self.write("%d %s" % (resp.code, resp.message))
@@ -212,7 +213,7 @@ class Application(web.Application):
         settings = {
             "static_path": os.path.join(os.path.dirname(__file__), 'static'),
             'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-            "debug": True
+            "debug": False
         }
 
         handlers = [
@@ -220,8 +221,8 @@ class Application(web.Application):
             (r"/about", AboutHandler),
             (r"/github", GithubHandler),
             (r"/githubpage", GithubPageHandler),
-            (r"/githubci", GithubCiHandler),
-            (r"/githubei", GithubEiHandler),
+            #(r"/githubci", GithubCiHandler),
+            #(r"/githubei", GithubEiHandler),
             (r"/user", FetchUserHandler),
             (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
         ]
