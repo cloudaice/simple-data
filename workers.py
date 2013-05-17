@@ -165,6 +165,7 @@ def commit_fetch_new_user():
                         })
                         resp = yield PutPage(options.fetch_new_user_id_url, body)
                         if resp.code == 200:
+                            resp = escape.json_decode(resp.body)
                             options.logger.info("file %s size %d commit success" %
                                                 (resp["content"]["name"], resp["content"]["size"]))
                         else:
