@@ -23,7 +23,7 @@ parse_config_file("config.py")
 formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
-@sync_loop_call(5 * 1000)
+@sync_loop_call(60 * 1000)
 @gen.coroutine
 def get_raw_data():
     """
