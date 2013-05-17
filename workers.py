@@ -14,7 +14,7 @@ import tornado.ioloop
 from libs.client import GetPage, PutPage, PatchPage, sync_loop_call
 
 
-parse_config_file("config.py")
+#parse_config_file("config.py")
 fetch_user_id = None
 fetch_new_user_id = None
 remote_users_file = None
@@ -37,6 +37,7 @@ def loop_call(delta=60 * 1000):
 def loop_fetch_new_user():
     global fetch_new_user_id
     global remote_users_file
+    options.logger.info("start loop_fetch_new_user now")
     if fetch_new_user_id is None:
         resp = yield GetPage(options.fetch_new_user_id_url)
         if resp.code == 200:
