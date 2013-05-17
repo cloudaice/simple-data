@@ -57,10 +57,12 @@ def loop_fetch_new_user():
             content = base64.b64decode(resp["content"])
             try:
                 content = zlib.decompress(content)
+                options.logger.info("zlib decode is ok")
             except zlib.error:
                 options.logger.error("users.json is not zlib decode")
             try:
                 remote_users_file = escape.json_decode(content)
+                options.logger.info("json decode is ok")
             except ValueError:
                 remote_users_file = {}
                 options.logger.warning("decode remote users file error")
@@ -69,9 +71,10 @@ def loop_fetch_new_user():
             options.logger.error("fetch users error %d %r" % (resp.code, resp.message))
     fetch_new_user_url = options.api_url + "/users?since=" + str(fetch_new_user_id["id"])
     resp = yield GetPage(fetch_new_user_url)
+    if "X-RateLimit-Remaining" in resp.headers:
+        options.logger.warning(resp.headers["X-RateLimit-Remaining"])
     if resp.code == 200:
         users_json = escape.json_decode(resp.body)
-        options.logger.info("last id is %d" % users_json[-1]["id"])
         if users_json == []:
             options.logger.info("no more users")
             tornado.ioloop.IOLoop.instance().add_timeout(
@@ -130,7 +133,7 @@ def commit_fetch_new_user():
                 sha = resp["sha"]
                 try:
                     body = json.dumps({
-                        "message": "update users.json on %d" % fetch_new_user_id,
+                        "message": "update users.json on %d" % fetch_new_user_id["id"],
                         "content": base64.b64encode(
                             zlib.compress(json.dumps(remote_users_file))
                         ),
@@ -138,7 +141,7 @@ def commit_fetch_new_user():
                         "sha": sha
                     })
                 except Exception, e:
-                    print e
+                    options.logger.error(e)
                 resp = yield PutPage(options.users_url, body)
                 if resp.code == 200:
                     resp = escape.json_decode(resp.body)
@@ -149,7 +152,7 @@ def commit_fetch_new_user():
                         resp = escape.json_decode(resp.body)
                         sha = resp["sha"]
                         body = json.dumps({
-                            "message": "update fetch_new_user_id.json on %d" % fetch_new_user_id,
+                            "message": "update fetch_new_user_id.json on %d" % fetch_new_user_id["id"],
                             "content": base64.b64encode(
                                 json.dumps(
                                     fetch_new_user_id,
@@ -177,7 +180,8 @@ def commit_fetch_new_user():
                 options.logger.error("when commit fetch new user id error %d, %r" %
                                      (resp.code, resp.message))
         else:
-            options.logger.info("new user id not > 5000")
+            options.logger.info("new user id %d is not 5000 more than old user id %d" %
+                                (fetch_new_user_id["id"], old_fetch_new_user_id["id"]))
     else:
         options.logger.info("remote_user_file and fetch_new_user_id has not ready")
     raise gen.Return()
