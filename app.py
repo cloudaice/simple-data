@@ -14,7 +14,7 @@ from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
 from addr import searchpage
-from libs.client import GetPage, PutPage, sync_loop_call
+from libs.client import GetPage, PutPage, PatchPage, sync_loop_call
 
 
 github_data = {}
@@ -168,10 +168,31 @@ class GithubHandler(ApiHandler):
         self.finish()
 
 
+class GithubEiHandler(ApiHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        body = json.dumps({
+            "description": "update users file",
+            "files": {
+                "users": {
+                    "content": "hello world"
+                }
+            }
+        })
+        resp = yield PatchPage(options.users_url, body) if resp.code == 200:
+            resp = escape.json_decode(resp.body)
+            self.write(json.dumps(resp, indent=4, separators=(',',':')))
+        else:
+            options.logger.error("update gist error")
+            self.write("%d %s" % (resp.code, resp.message))
+            
+
 class MainHandler(web.RequestHandler):
     @asynchronous
     def get(self):
         self.render("index.html")
+
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), 'static'),
@@ -200,6 +221,7 @@ class Application(web.Application):
             (r"/github", GithubHandler),
             (r"/githubpage", GithubPageHandler),
             (r"/githubci", GithubCiHandler),
+            (r"/githubei", GithubEiHandler),
             (r"/user", FetchUserHandler),
             (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
         ]
