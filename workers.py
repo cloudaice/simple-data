@@ -5,7 +5,7 @@ import base64
 import zlib
 from tornado import escape
 from tornado import gen
-from tornado import httpclient
+#from tornado import httpclient
 #from tornado.httpclient import HTTPError
 from tornado.httpclient import AsyncHTTPClient
 from tornado.options import options, parse_config_file
@@ -19,18 +19,6 @@ fetch_user_id = None
 fetch_new_user_id = None
 remote_users_file = None
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
-
-
-class TornadoDataRequest(httpclient.HTTPRequest):
-    def __init__(self, url, **kwargs):
-        super(TornadoDataRequest, self).__init__(url, **kwargs)
-        self.auth_username = options.username
-        self.auth_password = options.password
-        self.headers = {
-            'Content-Type': 'application/json; charset=UTF-8'
-        },
-        self.headers = {}
-        self.user_agent = "Tornado-data"
 
 
 def loop_call(delta=60 * 1000):
@@ -67,7 +55,10 @@ def loop_fetch_new_user():
         if resp.code == 200:
             resp = escape.json_decode(resp.body)
             content = base64.b64decode(resp["content"])
-            content = zlib.decompress(content)
+            try:
+                content = zlib.decompress(content)
+            except zlib.error:
+                options.logger.error("users.json is not zlib decode")
             try:
                 remote_users_file = escape.json_decode(content)
             except ValueError:
@@ -125,10 +116,10 @@ def commit_fetch_new_user():
             try:
                 old_fetch_new_user_id = escape.json_decode(content)
             except ValueError:
-                options.logger.error("when commit decode fetch new user id error")
+                options.logger.error("decode fetch new user id error")
                 old_fetch_new_user_id = {"id": fetch_new_user_id["id"] - 5001}
         else:
-            options.logger.error("when commit fetch new user id error %d, %r" %
+            options.logger.error("when fetch new user id error %d, %r" %
                                  (resp.code, resp.message))
             old_fetch_new_user_id = {"id": fetch_new_user_id["id"] - 5001}
 
@@ -137,24 +128,28 @@ def commit_fetch_new_user():
             if resp.code == 200:
                 resp = escape.json_decode(resp.body)
                 sha = resp["sha"]
-                body = json.dumps({
-                    "message": "update users.json",
-                    "content": base64.b64encode(
-                        zlib.compress(json.dumps(remote_users_file))
-                    ),
-                    "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
-                    "sha": sha
-                })
+                try:
+                    body = json.dumps({
+                        "message": "update users.json on %d" % fetch_new_user_id,
+                        "content": base64.b64encode(
+                            zlib.compress(json.dumps(remote_users_file))
+                        ),
+                        "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
+                        "sha": sha
+                    })
+                except Exception, e:
+                    print e
                 resp = yield PutPage(options.users_url, body)
                 if resp.code == 200:
                     resp = escape.json_decode(resp.body)
-                    options.logger.info(json.dumps(resp, indent=4, separators=(',', ': ')))
+                    options.logger.info("file %s size %d commit success" %
+                                        (resp["content"]["name"], resp["content"]["size"]))
                     resp = yield GetPage(options.fetch_new_user_id_url)
                     if resp.code == 200:
                         resp = escape.json_decode(resp.body)
                         sha = resp["sha"]
                         body = json.dumps({
-                            "message": "update fetch_new_user_id.json",
+                            "message": "update fetch_new_user_id.json on %d" % fetch_new_user_id,
                             "content": base64.b64encode(
                                 json.dumps(
                                     fetch_new_user_id,
@@ -167,7 +162,8 @@ def commit_fetch_new_user():
                         })
                         resp = yield PutPage(options.fetch_new_user_id_url, body)
                         if resp.code == 200:
-                            options.logger.info("update fetch new user id ok")
+                            options.logger.info("file %s size %d commit success" %
+                                                (resp["content"]["name"], resp["content"]["size"]))
                         else:
                             options.logger.error("when commit fetch new user id error %d, %r" %
                                                  (resp.code, resp.message))
