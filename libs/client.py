@@ -22,7 +22,7 @@ def sync_loop_call(delta=60 * 1000):
             try:
                 yield func(*args, **kwargs)
             except:
-                options.logger.info("function %r error" % func.__name__)
+                options.logger.error("function %r error" % func.__name__)
             options.logger.info("function %r end at %d" % (func.__name__, int(time.time())))
             tornado.ioloop.IOLoop.instance().add_timeout(
                 datetime.timedelta(milliseconds=delta),
