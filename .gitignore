@@ -13,3 +13,4 @@ logs/
 config.default
 *.json
 logs/
+*.json
