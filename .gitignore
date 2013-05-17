@@ -12,3 +12,4 @@ note
 logs/
 config.default
 *.json
+logs/
