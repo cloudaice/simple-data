@@ -59,3 +59,14 @@ def PutPage(url, body):
     except HTTPError, e:
         response = e
     raise gen.Return(response)
+
+
+@gen.coroutine
+def PatchPage(url, body):
+    client = AsyncHTTPClient.configurable_default()()
+    request = TornadoDataRequest(url, method="PATCH", body=body)
+    try:
+        response = yield client.fetch(request)
+    except HTTPError, e:
+        response = e
+    raise gen.Return(response)
