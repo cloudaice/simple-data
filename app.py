@@ -3,47 +3,27 @@ from math import exp
 import os
 import time
 import json
-import datetime
 import base64
-import toro
 from tornado import escape
 from tornado import web
 from tornado import gen
 from tornado import httpclient
-#from tornado.httpclient import HTTPError
 from tornado.httpserver import HTTPServer
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
-from functools import wraps
 import tornado.ioloop
 import tornado.log
 from addr import searchpage
-from libs.client import GetPage, PutPage
+from libs.client import GetPage, PutPage, sync_loop_call
 
 
 github_data = {}
 parse_config_file("config.py")
 
 formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
-event = toro.Event
 
 
-def loop_call(delta=60 * 1000):
-    def wrap_loop(func):
-        @wraps(func)
-        @gen.coroutine
-        def wrap_func(*args, **kwargs):
-            try:
-                yield func(*args, **kwargs)
-            except:
-                options.logger.error("fetch error in loop_call")
-            options.logger.info("process end %d" % int(time.time()))
-            tornado.ioloop.IOLoop.instance().add_timeout(datetime.timedelta(milliseconds=delta), wrap_func)
-        return wrap_func
-    return wrap_loop
-
-
-@loop_call(5 * 1000)
+@sync_loop_call(5 * 1000)
 @gen.coroutine
 def get_raw_data():
     """
@@ -81,9 +61,6 @@ def get_raw_data():
     else:
         options.logger.error("%d, %r" % (resp.code, resp.message))
     gen.Return()
-    #tornado.ioloop.IOLoop.instance().add_timeout(
-    #    datetime.timedelta(milliseconds=5 * 1000),
-    #    get_raw_data)
 
 
 class ApiHandler(web.RequestHandler):
@@ -150,10 +127,10 @@ class GithubCiHandler(ApiHandler):
             sha = resp['sha']
             url = options.api_url + "/repos/cloudaice/simple-data/contents/test.md"
             body = json.dumps({
-                "message": "update users.json",
+                "message": "update test",
                 "content": base64.b64encode(
                     json.dumps(
-                        {"name": "cloudaice", "type": "test"},
+                        {"name": "cloudaice", "type": "testmd"},
                         indent=4,
                         separators=(',', ': ')
                     )
