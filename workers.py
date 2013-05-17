@@ -169,8 +169,8 @@ def commit_fetch_new_user():
                 except Exception, e:
                     print e
                 #options.logger.info(json.dumps(resp, indent=4, separators=(',', ':')))
-                #options.logger.info("file %s size %d commit success" %
-                #                    (resp["files"]["users"]["name"], resp["files"]["users"]["size"]))
+                options.logger.info("file %s size %d commit success" %
+                                    (resp["files"]["users"]["filename"], resp["files"]["users"]["size"]))
                 resp = yield GetPage(options.fetch_new_user_id_url)
                 if resp.code == 200:
                     resp = escape.json_decode(resp.body)
