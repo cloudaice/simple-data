@@ -225,10 +225,10 @@ class Application(web.Application):
 
         web.Application.__init__(self, handlers, **settings)  # 这里不可以使用`super(Application, self)`
         
+get_raw_data()
 
 if __name__ == "__main__":
     parse_command_line()
-    get_raw_data()
     app = HTTPServer(Application())
     app.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
