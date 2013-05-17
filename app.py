@@ -33,8 +33,7 @@ def get_raw_data():
     global github_data
     resp = yield GetPage("https://api.github.com/gists/4524946")
     if resp.code == 200:
-        print resp.headers["X-RateLimit-Limit"]
-        print resp.headers["X-RateLimit-Remaining"]
+        options.logger.info("limit: %d" % resp.headers["X-RateLimit-Remaining"])
         options.logger.info("fetch gists sunccess")
         resp = escape.json_decode(resp.body)
         users_url = resp["files"]["github-users-stats.json"]["raw_url"]
@@ -42,10 +41,6 @@ def get_raw_data():
         users, languages = yield [GetPage(users_url),
                                   GetPage(languages_url)]
         if users.code == 200 and languages.code == 200:
-            if "X-RateLimit-Remaining" in languages.headers:
-                print languages.headers["X-RateLimit-Remaining"]
-            if "X-RateLimit-Remaining" in users.headers:
-                print users.headers["X-RateLimit-Remaining"]
             users_stats = escape.json_decode(users.body)
             languages_stats = escape.json_decode(languages.body)
             users_stats = sorted(users_stats,
