@@ -8,16 +8,17 @@ from tornado import gen
 #from tornado import httpclient
 #from tornado.httpclient import HTTPError
 from tornado.httpclient import AsyncHTTPClient
-from tornado.options import options, parse_config_file
+from tornado.options import parse_config_file
+from tornado.options import options
 from functools import wraps
 import tornado.ioloop
-from libs.client import GetPage, PutPage, PatchPage, sync_loop_call
+from libs.client import GetPage, PatchPage
 
 
-#parse_config_file("config.py")
-fetch_user_id = None
+parse_config_file("config.py")
 fetch_new_user_id = None
 remote_users_file = None
+last_users_file_num = 0  # 记录最后一个完整的文件的编号
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
@@ -35,45 +36,13 @@ def loop_call(delta=60 * 1000):
     
 @gen.coroutine
 def loop_fetch_new_user():
+    global last_users_file_num
     global fetch_new_user_id
     global remote_users_file
-    options.logger.info("start loop_fetch_new_user now")
-    if fetch_new_user_id is None:
-        resp = yield GetPage(options.fetch_new_user_id_url)
-        if resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            content = base64.b64decode(resp["content"])  # 解码base64
-            try:
-                fetch_new_user_id = escape.json_decode(content)  # 解成dict类型
-            except ValueError:
-                fetch_new_user_id = {"id": 0}
-                options.logger.warning("decode fetch_new_user_id error")
-        else:
-            fetch_new_user_id = {"id": 0}
-            options.logger.error("fetch new_user_id error %d %r" % (resp.code, resp.message))
     if remote_users_file is None:
-        resp = yield GetPage(options.users_url)
-        if resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            users_raw_url = resp["files"]["users"]["raw_url"]
-            resp = yield GetPage(users_raw_url)
-            try:
-                content = base64.b64decode(resp.body)
-            except TypeError:
-                options.logger.error("users is not base64 decode")
-            try:
-                content = zlib.decompress(content)
-            except zlib.error:
-                options.logger.error("users is not zlib decode")
-            try:
-                remote_users_file = escape.json_decode(content)
-            except ValueError:
-                remote_users_file = {}
-                options.logger.warning("decode remote users file error")
-        else:
-            remote_users_file = {}
-            options.logger.error("fetch users error %d %r" % (resp.code, resp.message))
-    fetch_new_user_url = options.api_url + "/users?since=" + str(fetch_new_user_id["id"])
+        remote_users_file = {}
+        fetch_new_user_id = last_users_file_num * options.user_file_interval  # 每个文件存储十万个用户信息
+    fetch_new_user_url = options.api_url + "/users?since=" + str(fetch_new_user_id)
     resp = yield GetPage(fetch_new_user_url)
     if "X-RateLimit-Remaining" in resp.headers:
         options.logger.warning(resp.headers["X-RateLimit-Remaining"])
@@ -85,9 +54,10 @@ def loop_fetch_new_user():
                 datetime.timedelta(milliseconds=3600 * 1000),
                 loop_fetch_new_user)
         else:
-            if fetch_new_user_id["id"] < users_json[-1]["id"]:
-                fetch_new_user_id["id"] = users_json[-1]["id"]
-                options.logger.info("new user_id is %d" % fetch_new_user_id["id"])
+            users_json = sorted(users_json, key=lambda d: d["id"])
+            if fetch_new_user_id < users_json[-1]["id"]:
+                fetch_new_user_id = users_json[-1]["id"]
+                options.logger.info("new user_id is %d" % fetch_new_user_id)
             for user in users_json:
                 if user["id"] not in remote_users_file:
                     remote_users_file[user["id"]] = {
@@ -100,6 +70,38 @@ def loop_fetch_new_user():
                         "contributions": 0,
                         "activity": 1
                     }
+            now_file_num = fetch_new_user_id / options.user_file_interval
+            if now_file_num > last_users_file_num:
+                try:
+                    update_users_file = {
+                        key: remote_users_file[key] for key in remote_users_file
+                        if key > (now_file_num - 1) * options.user_file_interval
+                        and key < now_file_num * options.user_file_interval + 1}
+                except KeyError, e:
+                    print e
+                    options.logger.error("update file %d KeyError in %r" % (now_file_num, e))
+                resp = yield update_file(update_users_file, now_file_num)
+                print "update..."
+                if resp.code == 200:
+                    print "200"
+                    last_users_file_num = now_file_num
+                    keys = remote_users_file.keys()
+                    try:
+                        for key in keys:
+                            if key <= now_file_num * options.user_file_interval:
+                                del remote_users_file[key]
+                    except Exception, e:
+                        print e
+                    print "del..."
+                    resp = escape.json_decode(resp.body)
+                    filename = "users%d" % now_file_num
+                    options.logger.info("file %s size %d update success" %
+                                        (resp["files"][filename]["filename"],
+                                         resp["files"][filename]["size"]))
+                else:
+                    options.logger.error("update users file error %d, %r" %
+                                         (resp.code, resp.message))
+                
             tornado.ioloop.IOLoop.instance().add_timeout(
                 datetime.timedelta(milliseconds=1 * 1000),
                 loop_fetch_new_user)
@@ -110,92 +112,25 @@ def loop_fetch_new_user():
             loop_fetch_new_user)
 
 
-@sync_loop_call(60 * 1000)
 @gen.coroutine
-def commit_fetch_new_user():
-    global remote_users_file
-    global fetch_new_user_id
-    if remote_users_file and fetch_new_user_id:
-        resp = yield GetPage(options.fetch_new_user_id_url)
-        if resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            try:
-                content = base64.b64decode(resp["content"])
-            except TypeError, e:
-                options.logger.error("base64 decode fetch_new_user_id error")
-            try:
-                old_fetch_new_user_id = escape.json_decode(content)
-            except ValueError:
-                options.logger.error("json decode fetch_new_user_id error")
-                old_fetch_new_user_id = {
-                    "id": fetch_new_user_id["id"] - options.update_new_user_interval - 1
+def update_file(update_users_file, now_file_num):
+    filename = "users%d" % now_file_num
+    try:
+        body = json.dumps({
+            "description": "update users file  %d" % now_file_num,
+            "files": {
+                filename: {
+                    "content": base64.b64encode(
+                        zlib.compress(json.dumps(update_users_file))
+                    )
                 }
-        else:
-            options.logger.error("when fetch new user id error %d, %r" %
-                                 (resp.code, resp.message))
-            old_fetch_new_user_id = {
-                "id": fetch_new_user_id["id"] - options.update_new_user_interval - 1
             }
-        if fetch_new_user_id["id"] - old_fetch_new_user_id["id"] > options.update_new_user_interval:
-            try:
-                body = json.dumps({
-                    "description": "update users file on %d" % fetch_new_user_id["id"],
-                    "files": {
-                        "users": {
-                            "content": base64.b64encode(
-                                zlib.compress(json.dumps(remote_users_file))
-                            )
-                        }
-                    }
-                })
-            except Exception, e:
-                options.logger.error("process body error %d %s" % (e.code, e.message))
-            resp = yield PatchPage(options.users_url, body)
-            if resp.code == 200:
-                resp = escape.json_decode(resp.body)
-                options.logger.info("file %s size %d commit success" %
-                                    (resp["files"]["users"]["filename"],
-                                     resp["files"]["users"]["size"]))
-                resp = yield GetPage(options.fetch_new_user_id_url)
-                if resp.code == 200:
-                    resp = escape.json_decode(resp.body)
-                    sha = resp["sha"]
-                    body = json.dumps({
-                        "message": "update fetch_new_user_id.json on %d" % fetch_new_user_id["id"],
-                        "content": base64.b64encode(
-                            json.dumps(
-                                fetch_new_user_id,
-                                indent=4,
-                                separators=(',', ': ')
-                            )
-                        ),
-                        "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
-                        "sha": sha
-                    })
-                    resp = yield PutPage(options.fetch_new_user_id_url, body)
-                    if resp.code == 200:
-                        resp = escape.json_decode(resp.body)
-                        options.logger.info("file %s size %d commit success" %
-                                            (resp["content"]["name"], resp["content"]["size"]))
-                    else:
-                        options.logger.error("when commit fetch new user id error %d, %r" %
-                                             (resp.code, resp.message))
-                else:
-                    options.logger.error("fetch new user id error %d, %r" %
-                                         (resp.code, resp.message))
-            else:
-                options.logger.error("update users file error %d, %r" %
-                                     (resp.code, resp.message))
-        else:
-            options.logger.info("new_user_id:%d - %d less than %d" %
-                                (fetch_new_user_id["id"],
-                                 old_fetch_new_user_id["id"],
-                                 options.update_new_user_interval))
-    else:
-        options.logger.info("remote_user_file and fetch_new_user_id has not ready")
-    raise gen.Return()
+        })
+    except Exception, e:
+        options.logger.error("process body error %d %s" % (e.code, e.message))
+    resp = yield PatchPage(options.users_url, body)
+    raise gen.Return(resp)
 
 if __name__ == "__main__":
     loop_fetch_new_user()
-    commit_fetch_new_user()
     tornado.ioloop.IOLoop.instance().start()
