@@ -224,7 +224,6 @@ handlers = [
 app = web.Application(handlers, **settings)
 get_raw_data()
 workers.loop_fetch_new_user()
-workers.commit_fetch_new_user()
 
 if __name__ == "__main__":
     parse_command_line()

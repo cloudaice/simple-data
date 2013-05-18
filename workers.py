@@ -8,14 +8,14 @@ from tornado import gen
 #from tornado import httpclient
 #from tornado.httpclient import HTTPError
 from tornado.httpclient import AsyncHTTPClient
-from tornado.options import parse_config_file
+#from tornado.options import parse_config_file
 from tornado.options import options
 from functools import wraps
 import tornado.ioloop
 from libs.client import GetPage, PatchPage
 
 
-parse_config_file("config.py")
+#parse_config_file("config.py")
 fetch_new_user_id = None
 remote_users_file = None
 last_users_file_num = 0  # 记录最后一个完整的文件的编号
