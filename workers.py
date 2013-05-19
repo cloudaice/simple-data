@@ -8,17 +8,17 @@ from tornado import gen
 #from tornado import httpclient
 #from tornado.httpclient import HTTPError
 from tornado.httpclient import AsyncHTTPClient
-#from tornado.options import parse_config_file
+from tornado.options import parse_config_file
 from tornado.options import options
 from functools import wraps
 import tornado.ioloop
 from libs.client import GetPage, PatchPage
 
 
-#parse_config_file("config.py")
-fetch_new_user_id = None
-remote_users_file = None
-last_users_file_num = 0  # 记录最后一个完整的文件的编号
+parse_config_file("config.py")
+update_id = None
+github-china = None
+github-world = None
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
@@ -28,20 +28,31 @@ def loop_call(delta=60 * 1000):
         def wrap_func(*args, **kwargs):
             func(*args, **kwargs)
             tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timedelta(milliseconds=delta),
+                datetime.timeelta(milliseconds=delta),
                 wrap_func)
         return wrap_func
     return wrap_loop
 
     
 @gen.coroutine
-def loop_fetch_new_user():
-    global last_users_file_num
-    global fetch_new_user_id
-    global remote_users_file
-    if remote_users_file is None:
+def update_user():
+    global update_id
+    global github-china
+    if last_users_file_num is None:
+        print "fetching..."
+        resp = yield GetPage(options.users_url)
+        print "fetched..."
+        while resp.code != 200:
+            options.logger.error("first get user gist error %d %s" % (resp.code, resp.message))
+            resp = yield GetPage(options.users_url)
+        resp = escape.json_encode(resp.body)
+        user_files = resp["files"].keys()
+        files_num = [int(filename[-1]) for filename in user_files
+                     if "users" in filename]
+        last_users_file_num = max(files_num)
+        options.logger.info("last user_id is %d" % last_users_file_num)
         remote_users_file = {}
-        fetch_new_user_id = last_users_file_num * options.user_file_interval  # 每个文件存储十万个用户信息
+        fetch_new_user_id = last_users_file_num * options.user_file_interval
     fetch_new_user_url = options.api_url + "/users?since=" + str(fetch_new_user_id)
     resp = yield GetPage(fetch_new_user_url)
     if "X-RateLimit-Remaining" in resp.headers:
