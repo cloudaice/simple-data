@@ -1,4 +1,0 @@
-{
-    "type": "testmd",
-    "name": "cloudaice"
-}
