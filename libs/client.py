@@ -4,11 +4,18 @@ from tornado import gen
 from tornado.httpclient import AsyncHTTPClient, HTTPError, HTTPRequest
 from tornado.options import options
 from functools import wraps
+from tornado import escape
 import tornado.ioloop
+import base64
 import time
 import datetime
+import json
+from math import exp
 
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
+
+
+formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
 def sync_loop_call(delta=60 * 1000):
@@ -19,10 +26,12 @@ def sync_loop_call(delta=60 * 1000):
         @wraps(func)
         @gen.coroutine
         def wrap_func(*args, **kwargs):
+            options.logger.info("function %r start at %d" % (func.__name__, int(time.time())))
             try:
                 yield func(*args, **kwargs)
-            except:
-                options.logger.error("function %r error" % func.__name__)
+            except Exception, e:
+                options.logger.error("function %r error: %s" %
+                                     (func.__name__, e))
             options.logger.info("function %r end at %d" % (func.__name__, int(time.time())))
             tornado.ioloop.IOLoop.instance().add_timeout(
                 datetime.timedelta(milliseconds=delta),
@@ -70,3 +79,21 @@ def PatchPage(url, body):
     except HTTPError, e:
         response = e
     raise gen.Return(response)
+
+
+@gen.coroutine
+def commit(url, message, data):
+    resp = yield GetPage(url)
+    if resp.code == 200:
+        resp = escape.json_decode(resp.body)
+        sha = resp["sha"]
+        body = json.dumps({
+            "message": message,
+            "content": base64.b64encode(json.dumps(data)),
+            "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
+            "sha": sha
+        })
+        resp = yield PutPage(url, body)
+        raise gen.Return(resp)
+    else:
+        raise gen.Return(resp)
