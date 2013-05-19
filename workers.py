@@ -2,23 +2,23 @@
 import json
 import datetime
 import base64
+import urllib
 import zlib
 from tornado import escape
 from tornado import gen
-#from tornado import httpclient
-#from tornado.httpclient import HTTPError
 from tornado.httpclient import AsyncHTTPClient
 from tornado.options import parse_config_file
 from tornado.options import options
 from functools import wraps
 import tornado.ioloop
-from libs.client import GetPage, PatchPage
+from libs.client import GetPage, PatchPage, sync_loop_call, formula
 
 
 parse_config_file("config.py")
-update_id = None
-github-china = None
-github-world = None
+github_china = []
+github_world = []
+current_china_page = 0
+current_world_page = 0
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
@@ -35,92 +35,104 @@ def loop_call(delta=60 * 1000):
 
     
 @gen.coroutine
-def update_user():
-    global update_id
-    global github-china
-    if last_users_file_num is None:
-        print "fetching..."
-        resp = yield GetPage(options.users_url)
-        print "fetched..."
-        while resp.code != 200:
-            options.logger.error("first get user gist error %d %s" % (resp.code, resp.message))
-            resp = yield GetPage(options.users_url)
-        resp = escape.json_encode(resp.body)
-        user_files = resp["files"].keys()
-        files_num = [int(filename[-1]) for filename in user_files
-                     if "users" in filename]
-        last_users_file_num = max(files_num)
-        options.logger.info("last user_id is %d" % last_users_file_num)
-        remote_users_file = {}
-        fetch_new_user_id = last_users_file_num * options.user_file_interval
-    fetch_new_user_url = options.api_url + "/users?since=" + str(fetch_new_user_id)
-    resp = yield GetPage(fetch_new_user_url)
-    if "X-RateLimit-Remaining" in resp.headers:
-        options.logger.warning(resp.headers["X-RateLimit-Remaining"])
+def contribute(login):
+    resp = yield GetPage(options.contribution_url(login))
     if resp.code == 200:
-        users_json = escape.json_decode(resp.body)
-        if users_json == []:
-            options.logger.info("no more users")
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timedelta(milliseconds=3600 * 1000),
-                loop_fetch_new_user)
-        else:
-            users_json = sorted(users_json, key=lambda d: d["id"])
-            if fetch_new_user_id < users_json[-1]["id"]:
-                fetch_new_user_id = users_json[-1]["id"]
-                options.logger.info("new user_id is %d" % fetch_new_user_id)
-            for user in users_json:
-                if user["id"] not in remote_users_file:
-                    remote_users_file[user["id"]] = {
-                        "login": user["login"],
-                        "id": user["id"],
-                        "gravatar": user["avatar_url"],
-                        "name": "",
-                        "location": "",
-                        "followers": 0,
-                        "contributions": 0,
-                        "activity": 1
-                    }
-            now_file_num = fetch_new_user_id / options.user_file_interval
-            if now_file_num > last_users_file_num:
-                try:
-                    update_users_file = {
-                        key: remote_users_file[key] for key in remote_users_file
-                        if key > (now_file_num - 1) * options.user_file_interval
-                        and key < now_file_num * options.user_file_interval + 1}
-                except KeyError, e:
-                    print e
-                    options.logger.error("update file %d KeyError in %r" % (now_file_num, e))
-                resp = yield update_file(update_users_file, now_file_num)
-                print "update..."
-                if resp.code == 200:
-                    print "200"
-                    last_users_file_num = now_file_num
-                    keys = remote_users_file.keys()
-                    try:
-                        for key in keys:
-                            if key <= now_file_num * options.user_file_interval:
-                                del remote_users_file[key]
-                    except Exception, e:
-                        print e
-                    print "del..."
-                    resp = escape.json_decode(resp.body)
-                    filename = "users%d" % now_file_num
-                    options.logger.info("file %s size %d update success" %
-                                        (resp["files"][filename]["filename"],
-                                         resp["files"][filename]["size"]))
-                else:
-                    options.logger.error("update users file error %d, %r" %
-                                         (resp.code, resp.message))
-                
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timedelta(milliseconds=1 * 1000),
-                loop_fetch_new_user)
+        resp = escape.json_decode(resp.body)
+        all_contribute = sum([day[1] for day in resp])
     else:
-        options.logger.error("fetch users error %d %r" % (resp.code, resp.message))
-        tornado.ioloop.IOLoop.instance().add_timeout(
-            datetime.timedelta(milliseconds=2 * 1000),
-            loop_fetch_new_user)
+        all_contribute = 0
+        options.logger.error("fetch contribution error %d, %s" %
+                             (resp.code, resp.message))
+    raise gen.Return(all_contribute)
+
+
+@sync_loop_call(1 * 1000)
+@gen.coroutine
+def update_china_user():
+    global github_china
+    global current_china_page
+    temp_github_china = []
+    options.logger.info("current page is %d" % current_china_page)
+    resp = yield search_china(current_china_page)
+    if resp.code == 200:
+        resp = escape.json_decode(resp.body)
+        users = resp["users"]
+        for user in users:
+            contributions = yield contribute(user["login"])
+            temp_github_china.append({
+                "login": user["login"],
+                "name": user["name"],
+                "location": user["location"],
+                "gravatar": "http://www.gravatar.com/avatar/" + user["gravatar_id"]
+                + urllib.urlencode({"s": 48}),
+                "language": user["language"],
+                "contributions": contributions,
+                "followers": user["followers"],
+            })
+        current_china_page += 1
+    elif resp.code == 422:
+        github_china = temp_github_china[:]
+        github_china = sorted(github_china,
+                              key=lambda d: d["contributions"] + formula(d["followers"]),
+                              reverse=True)
+        temp_github_china = []
+        current_china_page = 0
+        options.logger.info("china loop end")
+    else:
+        options.logger.error("get chine user error on page %d, error code %d, %s" %
+                             (current_china_page, resp.code, resp.message))
+
+
+@sync_loop_call(1 * 1000)
+@gen.coroutine
+def update_world_user():
+    global github_world
+    global current_world_page
+    temp_github_world = []
+    options.logger.info("current page is %d" % current_world_page)
+    resp = yield search_world(current_world_page)
+    if resp.code == 200:
+        resp = escape.json_decode(resp.body)
+        users = resp["users"]
+        for user in users:
+            contributions = yield contribute(user["login"])
+            temp_github_world.append({
+                "login": user["login"],
+                "name": user["name"],
+                "location": user["location"],
+                "gravatar": "http://www.gravatar.com/avatar/" + user["gravatar_id"]
+                + urllib.urlencode({"s": 48}),
+                "language": user["language"],
+                "contributions": contributions,
+                "followers": user["followers"],
+            })
+        current_world_page += 1
+    elif resp.code == 422:
+        github_world = temp_github_world[:]
+        github_world = sorted(github_world,
+                              key=lambda d: d["contributions"] + formula(d["followers"]),
+                              reverse=True)
+        temp_github_world = []
+        current_world_page = 0
+        options.logger.info("world loop end")
+    else:
+        options.logger.error("get world user error on page %d, error code %d, %s" %
+                             (current_world_page, resp.code, resp.message))
+
+
+@gen.coroutine
+def search_china(page):
+    url = options.api_url + "/legacy/user/search/location:china?start_page=" + str(page) + "&sort=followers&order=desc"
+    resp = yield GetPage(url)
+    raise gen.Return(resp)
+
+    
+@gen.coroutine
+def search_world(page):
+    url = options.api_url + "/legacy/user/search/followers:>0?start_page=" + str(page) + "&sort=followers&order=desc"
+    resp = yield GetPage(url)
+    raise gen.Return(resp)
 
 
 @gen.coroutine
@@ -138,10 +150,11 @@ def update_file(update_users_file, now_file_num):
             }
         })
     except Exception, e:
-        options.logger.error("process body error %d %s" % (e.code, e.message))
+        options.logger.error("Error: %s" % e)
     resp = yield PatchPage(options.users_url, body)
     raise gen.Return(resp)
 
 if __name__ == "__main__":
-    loop_fetch_new_user()
+    update_china_user()
+    update_world_user()
     tornado.ioloop.IOLoop.instance().start()
