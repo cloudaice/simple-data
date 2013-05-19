@@ -1,9 +1,7 @@
 #-*-coding: utf-8-*-
-from math import exp
 import os
 import time
 import json
-import base64
 from tornado import escape
 from tornado import web
 from tornado import gen
@@ -13,14 +11,12 @@ from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
 from addr import searchpage
-from libs.client import GetPage, PutPage, PatchPage, sync_loop_call
+from libs.client import GetPage, sync_loop_call, formula
 import workers
 
 
 github_data = {}
 parse_config_file("config.py")
-
-formula = lambda x: 2 ** 11 / (1 + pow(exp(1), -(x - 2 ** 8) / 2 ** 6))
 
 
 @sync_loop_call(60 * 1000)
@@ -109,44 +105,11 @@ class FetchUserHandler(ApiHandler):
         self.finish()
 
 
-class GithubCiHandler(ApiHandler):
+class GithubChinaHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
-    def get(self):
-        global remote_users_file
-        resp = yield GetPage(options.api_url + "/repos/cloudaice/simple-data/contents/test.md")
-        if resp.code == 404:
-            options.logger.info("fetch file 404")
-            self.write("%d, %r" % (resp.code, resp.message))
-        elif resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            sha = resp['sha']
-            url = options.api_url + "/repos/cloudaice/simple-data/contents/test.md"
-            body = json.dumps({
-                "message": "update test",
-                "content": base64.b64encode(
-                    json.dumps(
-                        {"name": "cloudaice", "type": "testmd"},
-                        indent=4,
-                        separators=(',', ': ')
-                    )
-                ),
-                "committer": {"name": "cloudaice", "email": "cloudaice@163.com"},
-                "sha": sha
-            })
-            resp = yield PutPage(url, body)
-            if resp.code == 200:
-                resp = escape.json_decode(resp.body)
-                if isinstance(resp, dict):
-                    self.write(json.dumps(resp, indent=4, separators=(',', ': ')))
-                    options.logger.info("file %s size %d commit success" %
-                                        (resp["content"]["name"], resp["content"]["size"]))
-                else:
-                    self.write("Failed")
-            else:
-                self.write("%d, %r" % (resp.code, resp.message))
-        else:
-            self.write(resp.message)
+    def post(self):
+        self.write(json.dumps(workers.github_china, indent=4, separators=(',', ': ')))
         self.finish()
 
 
@@ -164,38 +127,18 @@ class GithubHandler(ApiHandler):
         self.finish()
 
 
-class GithubEiHandler(ApiHandler):
+class GithubWorldHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
     def get(self):
-        body = json.dumps({
-            "description": "update users file",
-            "files": {
-                "users": {
-                    "content": "hello world"
-                }
-            }
-        })
-        resp = yield PatchPage(options.users_url, body)
-        if resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            self.write(json.dumps(resp, indent=4, separators=(',', ':')))
-        else:
-            options.logger.error("update gist error")
-            self.write("%d %s" % (resp.code, resp.message))
+        self.write(json.dumps(workers.github_world, indent=4, separators=(',', ': ')))
+        self.finish()
             
 
 class MainHandler(web.RequestHandler):
     @asynchronous
     def get(self):
         self.render("index.html")
-
-
-settings = {
-    "static_path": os.path.join(os.path.dirname(__file__), 'static'),
-    'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-    "debug": False
-}
 
 
 class AboutHandler(web.RequestHandler):
@@ -212,18 +155,19 @@ settings = {
 
 handlers = [
     (r"/", MainHandler),
-    (r"/about", AboutHandler),
     (r"/github", GithubHandler),
     (r"/githubpage", GithubPageHandler),
-    #(r"/githubci", GithubCiHandler),
-    #(r"/githubei", GithubEiHandler),
+    (r"/githubchina", GithubChinaHandler),
+    (r"/githubworld", GithubWorldHandler),
     (r"/user", FetchUserHandler),
+    (r"/about", AboutHandler),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ]
 
 app = web.Application(handlers, **settings)
 get_raw_data()
-workers.loop_fetch_new_user()
+workers.update_china_user()
+workers.update_world_user()
 
 if __name__ == "__main__":
     parse_command_line()
