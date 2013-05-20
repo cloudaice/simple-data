@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Github Data{% end %}
 {% block content %} 
+<ul id="myTab" class="nav nav-tabs">
+    <li class=""><a href="#githubchina">China</a></li>
+    <li class=""><a href="#githubworld">World</a></li>
+</ul>
 <div id="github-table">
 </div>
 {% end %}
-
+{% block script %}
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="http://d3js.org/queue.v1.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script src="/static/js/map.js"></script>
+{% end %}
