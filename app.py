@@ -140,18 +140,19 @@ class ChinaMapHandler(ApiHandler):
                     china_map[city]['score'] += 1
                     break
 
-        top_score = max([city["score"] for cityname, city in china_map.items()])
-        capture = top_score / 6
-        if capture == 0:
-            capture = 1
         for city in china_map:
-            china_map[city]['stateInitColor'] = 6 - china_map[city]['score'] / capture
             if china_map[city]['score'] > 0 and china_map[city]['score'] < 5:
                 china_map[city]['stateInitColor'] = 5
             elif china_map[city]['score'] >= 5 and china_map[city]['score'] < 10:
                 china_map[city]['stateInitColor'] = 4
             elif china_map[city]['score'] >= 10 and china_map[city]['score'] < 50:
                 china_map[city]['stateInitColor'] = 3
+            elif china_map[city]['score'] >= 50 and china_map[city]['score'] < 100:
+                china_map[city]['stateInitColor'] = 2
+            elif china_map[city]['score'] >= 100 and china_map[city]['score'] < 200:
+                china_map[city]['stateInitColor'] = 1
+            elif china_map[city]['score'] >= 200:
+                china_map[city]['stateInitColor'] = 0
 
         self.write(json.dumps(china_map, indent=4, separators=(',', ': ')))
 
