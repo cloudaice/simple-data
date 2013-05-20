@@ -5,12 +5,22 @@
     <li class=""><a href="#githubchina">China</a></li>
     <li class=""><a href="#githubworld">World</a></li>
 </ul>
-<div id="github-table">
+<div id="github-table" class="row">
+    <div class="span6">
+        <h2>中国</h2>
+        <div id="ChinaMap"></div>
+    </div>
+    <div class="span6">
+        <h2>世界</h2>
+        <div id="WorldMap"></div>
+    </div>
 </div>
 {% end %}
 {% block script %}
 <script src="/static/js/d3.v3.min.js"></script>
-<script src="http://d3js.org/queue.v1.min.js"></script>
-<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script type="text/javascript" src="/static/js/raphael-min.js"></script>
+<script type="text/javascript" src="/static/js/chinaMapConfig.js"></script>
+<script type="text/javascript" src="/static/js/worldMapConfig.js"></script>
+<script type="text/javascript" src="/static/js/jquery-svgmap.js"></script>
 <script src="/static/js/map.js"></script>
 {% end %}
