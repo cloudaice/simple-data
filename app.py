@@ -40,8 +40,10 @@ def get_raw_data():
         if users.code == 200 and languages.code == 200:
             users_stats = escape.json_decode(users.body)
             languages_stats = escape.json_decode(languages.body)
+            for user in users_stats:
+                user["score"] = user["contributions"] + formula(user["followers"])
             users_stats = sorted(users_stats,
-                                 key=lambda d: d["contributions"] + formula(d["followers"]),
+                                 key=lambda d: d['score'],
                                  reverse=True)
             users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
             github_data["users_stats"] = users_stats
@@ -130,7 +132,7 @@ class GithubHandler(ApiHandler):
 class GithubWorldHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
-    def get(self):
+    def post(self):
         self.write(json.dumps(workers.github_world, indent=4, separators=(',', ': ')))
         self.finish()
             
@@ -165,9 +167,9 @@ handlers = [
 ]
 
 app = web.Application(handlers, **settings)
-get_raw_data()
-workers.update_china_user()
-workers.update_world_user()
+#get_raw_data()
+#workers.update_china_user()
+#workers.update_world_user()
 
 if __name__ == "__main__":
     parse_command_line()
