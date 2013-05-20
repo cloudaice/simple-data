@@ -59,7 +59,7 @@ def contribute(login):
     raise gen.Return(all_contribute)
 
 
-@sync_loop_call(30 * 1000)
+@sync_loop_call(15 * 1000)
 @gen.coroutine
 def update_china_user():
     global github_china
