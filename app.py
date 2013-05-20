@@ -18,6 +18,13 @@ import workers
 github_data = {}
 parse_config_file("config.py")
 
+city_list = ["heilongjiang", "jilin", "liaoning", "hebei", "shandong", "jiangsu",
+             "zhejiang", "anhui", "henan", "shanxi", "shanxii", "gansu", "hubei",
+             "jiangxi", "fujian", "hunan", "guizou", "sichuan", "yunnan", "qinghai",
+             "hainan", "shanghai", "chongqing", "tianjin", "beijing", "ningxia",
+             "neimenggu", "guangxi", "xinjiang", "xizang", "guangdong",
+             "xianggang", "taiwan", "aomen"]
+
 
 @sync_loop_call(60 * 1000)
 @gen.coroutine
@@ -152,7 +159,7 @@ class AboutHandler(web.RequestHandler):
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), 'static'),
     'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-    "debug": False
+    "debug": True
 }
 
 handlers = [
@@ -167,9 +174,9 @@ handlers = [
 ]
 
 app = web.Application(handlers, **settings)
-#get_raw_data()
-#workers.update_china_user()
-#workers.update_world_user()
+get_raw_data()
+workers.update_china_user()
+workers.update_world_user()
 
 if __name__ == "__main__":
     parse_command_line()
