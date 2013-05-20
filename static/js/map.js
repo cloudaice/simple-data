@@ -1,29 +1,46 @@
-$('#ChinaMap').SVGMap({
-    mapName: 'china',
-    stateData: {
-        'heilongjiang': {'stateInitColor': 1, 'score': 1},
-        'beijing': {'stateInitColor': 2, 'score': 0},
-        'shanghai': {'stateInitColor': 3, 'score': 0},
-        'tianjin': {'stateInitColor': 4, 'score': 0},
-        'sichuan': {'stateInitColor': 5, 'score': 0},
-        'shandong': {'stateInitColor': 6, 'score': 0},
-        'shanxi': {'stateInitColor': 3, 'score': 0},
-        'zhejiang': {'stateInitColor': 4, 'score': 0},
-        'jiangshu': {'stateInitColor': 2, 'score': 0},
-        'hunan': {'stateInitColor': 4, 'score': 0},
-        'guizou': {'stateInitColor': 5, 'score': 0},
-        'neimenggu': {'stateInitColor': 6, 'score': 0},
-        'henan': {'stateInitColor': 3, 'score': 0},
-        'gansu': {'stateInitColor': 4, 'score': 0},
-        'ningxia': {'stateInitColor': 2, 'score': 0},
-        'jilin': {'stateInitColor': 1, 'score': 0}
-    },
-    stateTipHtml: function(stateData, obj){
-        return obj.name + ": " + (stateData)[obj.id].score;
+$(document).ready(function(){
+    function load_china_map(){
+        $.ajax({
+            type: 'POST',
+            url: '/chinamap',
+            data: {"site": "Tornado-data"},
+            dataType: "json",
+            success: function(data){
+                $('#ChinaMap').SVGMap({
+                    mapName: 'china',
+                    stateData: data,
+                    stateTipHtml: function(stateData, obj){
+                        return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || obj.id);
+                    },
+                    mapWidth: 960,
+                    mapHeight: 480
+                });
+            }
+        });
     }
+
+    load_china_map();
+/*
+    $('#WorldMap').SVGMap({
+        mapName: 'world',
+        stateData: {
+            'CN': {'stateInitColor': 0, 'score': 0}
+        },
+        mapWidth: 600,
+        mapHeight: 400
+    });
+*/
 });
-$('#WorldMap').SVGMap({
-    mapName: 'world',
-    mapWidth: 600,
-    mapHeight: 400
-});
+/*
+         {
+        'heilongjiang': {'stateInitColor': 0, 'score': 0},
+        'liaoning': {'stateInitColor': 1, 'score': 1},
+        'neimenggu': {'stateInitColor': 2, 'score': 2},
+        'gansu': {'stateInitColor': 3, 'score': 3},
+        'sichuan': {'stateInitColor': 4, 'score': 4},
+        'shandong': {'stateInitColor': 5, 'score': 5},
+        'shanxi': {'stateInitColor': 6, 'score': 6},
+        'zhejiang': {'stateInitColor': 7, 'score': 7},
+        'jiangshu': {'stateInitColor': 8, 'score': 8}
+    },
+*/

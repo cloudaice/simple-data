@@ -4,14 +4,12 @@ $(document).ready(function(){
     classname = '/' + lasturl[lasturl.length-1]; 
     //load_table("/github");
     function load_table(url){
-        console.debug("hello");
         $.ajax({
             type: 'POST',
             url: url,
             data: {"site": "Tornado-data"},
             dataType: "json",
             success: function(data){
-                console.debug("hello");
                 var github_table  = "<table class='table table-striped'><thead><tr>";
                 github_table +=  "<th>Rank</th>";
                 github_table +=  "<th>Name</th>";
