@@ -10,7 +10,7 @@ $(document).ready(function(){
                     mapName: 'china',
                     stateData: data,
                     stateTipHtml: function(stateData, obj){
-                        return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || obj.id);
+                        return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
                     },
                     mapWidth: 960,
                     mapHeight: 480
