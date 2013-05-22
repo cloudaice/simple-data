@@ -1,9 +1,6 @@
 #-*-coding: utf-8-*-
-import json
 import datetime
-import base64
 import urllib
-import zlib
 from tornado import escape
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient
@@ -11,7 +8,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.options import options
 from functools import wraps
 import tornado.ioloop
-from libs.client import GetPage, PatchPage, sync_loop_call, formula
+from libs.client import GetPage, sync_loop_call, formula
 
 
 #parse_config_file("config.py")
@@ -155,25 +152,6 @@ def search_world(page):
     resp = yield GetPage(url)
     raise gen.Return(resp)
 
-
-@gen.coroutine
-def update_file(update_users_file, now_file_num):
-    filename = "users%d" % now_file_num
-    try:
-        body = json.dumps({
-            "description": "update users file  %d" % now_file_num,
-            "files": {
-                filename: {
-                    "content": base64.b64encode(
-                        zlib.compress(json.dumps(update_users_file))
-                    )
-                }
-            }
-        })
-    except Exception, e:
-        options.logger.error("Error: %s" % e)
-    resp = yield PatchPage(options.users_url, body)
-    raise gen.Return(resp)
 
 if __name__ == "__main__":
     update_china_user()
