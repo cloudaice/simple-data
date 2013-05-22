@@ -16,6 +16,7 @@ import workers
 
 github_data = {}
 parse_config_file("config.py")
+parse_config_file("settings.py")
 
 city_list = [
     "heilongjiang", "jilin", "liaoning", "hebei", "shandong", "jiangsu", "zhejiang", "anhui",
