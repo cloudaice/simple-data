@@ -36,7 +36,7 @@ Formula:
 
 Score:
 
-   Score = Formula(followers) + Contributions
+    Score = Formula(followers) + Contributions
 
 首先抓取followers排名前1000的用户，然后再使用公式计算Score值。对folloers有一定依赖，
 主要看contributions。
@@ -45,9 +45,14 @@ Score:
 
 TODO
 ----
+
 + 完善Github用户所在地分析
 
 + 增加世界范围内用户分布地图
 
 
-应用网址: [data.cloudaice.com](http://data.cloudaice.com)
+
+应用网址
+--------
+
+[data.cloudaice.com](http://data.cloudaice.com)
