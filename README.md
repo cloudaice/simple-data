@@ -52,7 +52,10 @@ TODO
 
 
 
-应用网址
+应用地址
 --------
 
-[data.cloudaice.com](http://data.cloudaice.com)
+[data.cloudaice.com](http://data.cloudaice.com)。
+
+
+**注**: 如果打不开，请使用梯子。
