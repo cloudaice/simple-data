@@ -18,6 +18,18 @@ AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 formula = lambda x: 2 ** 10 / (1 + pow(exp(1), -(x - 2 ** 7) / 2 ** 5))
 
 
+def loop_call(delta=60 * 1000):
+    def wrap_loop(func):
+        @wraps(func)
+        def wrap_func(*args, **kwargs):
+            func(*args, **kwargs)
+            tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timeelta(milliseconds=delta),
+                wrap_func)
+        return wrap_func
+    return wrap_loop
+
+
 def sync_loop_call(delta=60 * 1000):
     """
     Wait for func down then process add_timeout

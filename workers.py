@@ -1,12 +1,10 @@
 #-*-coding: utf-8-*-
-import datetime
 import urllib
 from tornado import escape
 from tornado import gen
 from tornado.httpclient import AsyncHTTPClient
 #from tornado.options import parse_config_file
 from tornado.options import options
-from functools import wraps
 import tornado.ioloop
 from libs.client import GetPage, sync_loop_call, formula
 
@@ -29,18 +27,6 @@ def wash(users):
             user_names.append(user['login'])
             new_users.append(user)
     return new_users
-
-
-def loop_call(delta=60 * 1000):
-    def wrap_loop(func):
-        @wraps(func)
-        def wrap_func(*args, **kwargs):
-            func(*args, **kwargs)
-            tornado.ioloop.IOLoop.instance().add_timeout(
-                datetime.timeelta(milliseconds=delta),
-                wrap_func)
-        return wrap_func
-    return wrap_loop
 
     
 @gen.coroutine
