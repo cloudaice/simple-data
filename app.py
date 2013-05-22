@@ -1,6 +1,5 @@
 #-*-coding: utf-8-*-
 import os
-import time
 import json
 from tornado import escape
 from tornado import web
@@ -10,7 +9,7 @@ from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
-from libs.client import GetPage, sync_loop_call, formula
+from libs.client import GetPage
 import workers
 
 
@@ -51,44 +50,6 @@ country_list = [
     'Province of China Taiwan', 'United Republic of Tanzania', 'Ukraine', 'Uganda', 'United States',
     'Uruguay', 'Uzbekistan', 'Bolivarian Republic of Venezuela', 'Viet Nam', 'Vanuatu', 'Yemen',
     'South Africa', 'Zambia', 'Zimbabwe']
-
-
-@sync_loop_call(60 * 1000)
-@gen.coroutine
-def get_raw_data():
-    """
-    Every 5 seconds will fetch github.com
-    """
-    options.logger.info("start fetch %d" % int(time.time()))
-    global github_data
-    resp = yield GetPage("https://api.github.com/gists/4524946")
-    if resp.code == 200:
-        options.logger.info("fetch gists sunccess")
-        if "X-RateLimit-Remaining" in resp.headers:
-            options.logger.info("limit: %r" % resp.headers["X-RateLimit-Remaining"])
-        resp = escape.json_decode(resp.body)
-        users_url = resp["files"]["github-users-stats.json"]["raw_url"]
-        languages_url = resp["files"]["github-languages-stats.json"]["raw_url"]
-        users, languages = yield [GetPage(users_url),
-                                  GetPage(languages_url)]
-        if users.code == 200 and languages.code == 200:
-            users_stats = escape.json_decode(users.body)
-            languages_stats = escape.json_decode(languages.body)
-            for user in users_stats:
-                user["score"] = user["contributions"] + formula(user["followers"])
-            users_stats = sorted(users_stats,
-                                 key=lambda d: d['score'],
-                                 reverse=True)
-            users_stats = filter(lambda u: 'china' in u['location'].lower(), users_stats)
-            github_data["users_stats"] = users_stats
-            github_data["languages_stats"] = languages_stats
-            options.logger.info("fetch users and languages success")
-        else:
-            options.logger.error("%d, %r" % (users.code, users.message))
-            options.logger.error("%d, %r" % (languages.code, languages.message))
-    else:
-        options.logger.error("%d, %r" % (resp.code, resp.message))
-    gen.Return()
 
 
 class ApiHandler(web.RequestHandler):
@@ -259,7 +220,6 @@ handlers = [
 ]
 
 app = web.Application(handlers, **settings)
-#get_raw_data()
 workers.update_china_user()
 workers.update_world_user()
 
