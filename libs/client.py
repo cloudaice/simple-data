@@ -97,3 +97,20 @@ def commit(url, message, data):
         raise gen.Return(resp)
     else:
         raise gen.Return(resp)
+
+
+@gen.coroutine
+def update_file(gist_url, filename, data):
+    try:
+        body = json.dumps({
+            "description": "update users file $s" % filename,
+            "files": {
+                filename: {
+                    "content": json.dumps(data)
+                }
+            }
+        })
+    except Exception, e:
+        options.logger.error("Error: %s" % e)
+    resp = yield PatchPage(options.users_url, body)
+    raise gen.Return(resp)
