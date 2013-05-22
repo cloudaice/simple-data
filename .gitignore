@@ -1,8 +1,3 @@
-bin/
-include/
-lib/
-share/
-src/
 *.pyc
 .env
 *.swp
@@ -10,7 +5,4 @@ demo/
 .anvil/
 note
 logs/
-config.default
-*.json
-logs/
-*.json
+config.py
