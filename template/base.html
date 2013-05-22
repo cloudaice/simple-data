@@ -1,128 +1,125 @@
 <!DOCTYPE html>
 <html lang='en'><html xmlns:wb=“http://open.weibo.com/wb”>
-<head>
-    <title>{% block title %}{% end %}</title>
-    <meta http-equiv='Content-Type' content='text/html'; charset='utf-8'/> <meta http-equiv='Content-Language' content = 'zh-cn'/>
-    <meta name="keywords" content ="github data"/>
-    <meta name="author" content="cloudaice"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="make data simple">
+        <head>
+            <title>{% block title %}{% end %}</title>
+            <meta http-equiv='Content-Type' content='text/html'; charset='utf-8'/> <meta http-equiv='Content-Language' content = 'zh-cn'/>
+            <meta name="keywords" content ="github data"/>
+            <meta name="author" content="cloudaice"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="description" content="make data simple">
 
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-responsive.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/datepicker.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/base.css">
-    {% block css %} {% end %}
+            <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css"/>
+            <link rel="stylesheet" type="text/css" href="/static/css/bootstrap-responsive.css"/>
+            <link rel="stylesheet" type="text/css" href="/static/css/jquery-ui.css"/>
+            <link rel="stylesheet" type="text/css" href="/static/css/datepicker.css">
+            <link rel="stylesheet" type="text/css" href="/static/css/base.css">
+            {% block css %} {% end %}
 
-    <style type="text/css">
+            <style type="text/css">
 
-      /* Sticky footer styles
-      -------------------------------------------------- */
+                /* Sticky footer styles
+                -------------------------------------------------- */
 
-      html,
-      body {
-        height: 100%;
-        /* The html and body elements cannot have any padding or margin. */
-      }
+                html,
+                body {
+                    height: 100%;
+                    /* The html and body elements cannot have any padding or margin. */
+                }
 
-      /* Wrapper for page content to push down footer */
-      #wrap {
-        min-height: 100%;
-        height: auto !important;
-        height: 100%;
-        /* Negative indent footer by it's height */
-        margin: 0 auto -60px;
-      }
+                /* Wrapper for page content to push down footer */
+                #wrap {
+                    min-height: 100%;
+                    height: auto !important;
+                    height: 100%;
+                    /* Negative indent footer by it's height */
+                    margin: 0 auto -60px;
+                }
 
-      /* Set the fixed height of the footer here */
-      #push,
-      #footer {
-        height: 60px;
-      }
-      #footer {
-        background-color: #f5f5f5;
-      }
+                /* Set the fixed height of the footer here */
+                #push,
+                #footer {
+                    height: 60px;
+                }
+                #footer {
+                    background-color: #f5f5f5;
+                }
 
-      /* Lastly, apply responsive CSS fixes as necessary */
-      @media (max-width: 767px) {
-        #footer {
-          margin-left: -20px;
-          margin-right: -20px;
-          padding-left: 20px;
-          padding-right: 20px;
-        }
-      }
+                /* Lastly, apply responsive CSS fixes as necessary */
+                @media (max-width: 767px) {
+                    #footer {
+                        margin-left: -20px;
+                        margin-right: -20px;
+                        padding-left: 20px;
+                        padding-right: 20px;
+                    }
+                }
 
-      /* Custom page CSS
-      -------------------------------------------------- */
-      /* Not required for template or sticky footer method. */
+                /* Custom page CSS
+                -------------------------------------------------- */
+                /* Not required for template or sticky footer method. */
 
-      #wrap > .container {
-        padding-top: 60px;
-      }
-      .container .credit {
-        margin: 20px 0;
-      }
+                #wrap > .container {
+                    padding-top: 60px;
+                }
+                .container .credit {
+                    margin: 20px 0;
+                }
 
-      code {
-        font-size: 80%;
-      }
+                code {
+                    font-size: 80%;
+                }
 
-    </style>
-    <!--google analysic-->
-    <script type="text/javascript">
-        var _gaq = _gaq || [];
-        _gaq.push(['_setAccount', 'UA-28805988-2']);
-        _gaq.push(['_trackPageview']);
-
-        (function() {
-         var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-         })();
-     </script>
-</head>
-<body >
-    <div id="wrap">
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-        <a class="brand"  href="/">Simple Data</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav" id="topTab">
-              <li id='top3'><a href="/about">About</a></li>
-              <li id='top3'><a href="https://github.com/cloudaice/simple-data">Source</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-   <div class="container">
-     <div class= "content">
-     {% block content %}{% end %}
-     </div>
-   </div>
-   <div id="push"></div>
-   </div>
-    <div id="footer">
-      <div class="container">
-          <p class="muted credit">
-          made by<a href="http://github.com/cloudaice" target="_blank" tilte= "cloudaice">Xiang Chao</a>
-          @ 2012.
-          </p>
-      </div>
-    </div>
-    <script type="text/javascript" src="/static/js/jquery-1.9.1.min.js"></script>
-    <script type="text/javascript" src="/static/js/bootstrap.js"></script>
-    <script type="text/javascript" src="/static/js/base.js"></script>
-    <script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js" type="text/javascript" charset="utf-8"></script>
-    {% block script %}
-    {% end %}
-</body>
-</html>
+            </style>
+        </head>
+        <body >
+            <div id="wrap">
+                <div class="navbar navbar-inverse navbar-fixed-top">
+                    <div class="navbar-inner">
+                        <div class="container">
+                            <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </a>
+                            <a class="brand"  href="/">Simple Data</a>
+                            <div class="nav-collapse collapse">
+                                <ul class="nav" id="topTab">
+                                    <li id='top3'><a href="/about">About</a></li>
+                                    <li id='top3'><a href="https://github.com/cloudaice/simple-data">Source</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class= "content">
+                        {% block content %}{% end %}
+                    </div>
+                </div>
+                <div id="push"></div>
+            </div>
+            <div id="footer">
+                <div class="container">
+                    <p class="muted credit">
+                    made by<a href="http://github.com/cloudaice" target="_blank" tilte= "cloudaice">Xiang Chao</a>
+                    @ 2012.
+                    </p>
+                </div>
+            </div>
+            <!--google analysic-->
+            <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+                ga('create', 'UA-28805988-4', 'cloudaice.com');
+                ga('send', 'pageview');
+            </script>
+            <script type="text/javascript" src="/static/js/jquery-1.9.1.min.js"></script>
+            <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+            <script type="text/javascript" src="/static/js/base.js"></script>
+            <script src="http://tjs.sjs.sinajs.cn/open/api/js/wb.js" type="text/javascript" charset="utf-8"></script>
+            {% block script %}
+            {% end %}
+        </body>
+    </html>
