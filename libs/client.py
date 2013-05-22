@@ -26,13 +26,15 @@ def sync_loop_call(delta=60 * 1000):
         @wraps(func)
         @gen.coroutine
         def wrap_func(*args, **kwargs):
-            options.logger.info("function %r start at %d" % (func.__name__, int(time.time())))
+            options.logger.info("function %r start at %d" %
+                                (func.__name__, int(time.time())))
             try:
                 yield func(*args, **kwargs)
             except Exception, e:
                 options.logger.error("function %r error: %s" %
                                      (func.__name__, e))
-            options.logger.info("function %r end at %d" % (func.__name__, int(time.time())))
+            options.logger.info("function %r end at %d" %
+                                (func.__name__, int(time.time())))
             tornado.ioloop.IOLoop.instance().add_timeout(
                 datetime.timedelta(milliseconds=delta),
                 wrap_func)
