@@ -1,7 +1,6 @@
 #-*-coding: utf-8-*-
 import os
 import json
-from tornado import escape
 from tornado import web
 from tornado import gen
 from tornado import httpclient
@@ -9,7 +8,6 @@ from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
-from libs.client import GetPage
 import workers
 
 
@@ -146,38 +144,11 @@ class WorldMapHandler(ApiHandler):
         self.write(json.dumps(world_map, indent=4, separators=(',', ': ')))
 
 
-class FetchUserHandler(ApiHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self):
-        resp = yield GetPage(options.contribution_url("cloudaice"))
-        if resp.code == 200:
-            resp = escape.json_decode(resp.body)
-            self.write(json.dumps(resp, indent=4, separators=(",", ": ")))
-        else:
-            self.write("%d, %r" % (resp.code, resp.message))
-        self.finish()
-
-
 class GithubChinaHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
     def post(self):
         self.write(json.dumps(workers.github_china, indent=4, separators=(',', ': ')))
-        self.finish()
-
-
-class GithubHandler(ApiHandler):
-    @asynchronous
-    @gen.coroutine
-    def post(self):
-        global github_data
-        if 'users_stats' not in github_data:
-            users_stats = []
-        else:
-            users_stats = github_data["users_stats"]
-        #languages_stats = github_data["languages_stats"]
-        self.write(json.dumps(users_stats, indent=4, separators=(',', ': ')))
         self.finish()
 
 
@@ -209,12 +180,10 @@ settings = {
 
 handlers = [
     (r"/", MainHandler),
-    (r"/github", GithubHandler),
     (r"/githubchina", GithubChinaHandler),
     (r"/githubworld", GithubWorldHandler),
     (r"/chinamap", ChinaMapHandler),
     (r"/worldmap", WorldMapHandler),
-    (r"/user", FetchUserHandler),
     (r"/about", AboutHandler),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ]
