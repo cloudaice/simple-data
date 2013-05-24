@@ -5,6 +5,8 @@ import logging as logs
 
 define("port", default=8000)
 
+define("debug", True)
+
 define("logger", logs.getLogger("Tornado-data"))
 
 define("api_url", "https://api.github.com")

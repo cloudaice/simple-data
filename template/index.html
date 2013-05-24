@@ -1,25 +1,63 @@
 {% extends "base.html" %}
 {% block title %}Github Data{% end %}
 {% block content %} 
-<ul id="myTab" class="nav nav-tabs">
-    <li class=""><a href="#githubchina">China</a></li>
-    <li class=""><a href="#githubworld">World</a></li>
-</ul>
-<div id="github-table" class="row">
-    <div class="span1">
+<div class="row">
+    <div class="span3">
     </div>
     <div class="span6">
-        <div id="ChinaMap"></div>
+        <ul id="myTab" class="nav nav-pills">
+            <li class="active"><a href="#chinamap">China Map</a></li>
+            <li class=""><a href="#chinarank">China Rank</a></li>
+            <li class=""><a href="#worldrank">World Rank</a></li>
+        </ul>
     </div>
-    <div class="span1">
+    <div class="span3">
     </div>
+</div>
+<div class = "tab-content" >
+    <div id="chinamap" class="tab-pane active">
+        <div class="row">
+            <div class="span1">
+            </div>
+            <div class="span6">
+                <div id="ChinaMap"></div>
+            </div>
+            <div class="span1">
+            </div>
+        </div>
+    </div>
+    <div id="chinarank" class="tab-pane">
+        <div class="row">
+            <div class="span2">
+            </div>
+            <div class="span8">
+                <div id="china-table">
+                </div>
+            </div>
+            <div class="span2">
+            </div>
+        </div>
+    </div>
+    <div id="worldrank" class="tab-pane">
+        <div class="row"> 
+            <div class="span2">
+            </div>
+            <div class="span8">
+                <div id="world-table"></div>
+            </div>
+            <div class="span2">
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 {% end %}
 {% block script %}
-<script src="/static/js/d3.v3.min.js"></script>
+<script type="text/javascript" src="/static/js/d3.v3.min.js"></script>
 <script type="text/javascript" src="/static/js/raphael-min.js"></script>
 <script type="text/javascript" src="/static/js/chinaMapConfig.js"></script>
 <script type="text/javascript" src="/static/js/worldMapConfig.js"></script>
 <script type="text/javascript" src="/static/js/jquery-svgmap.js"></script>
-<script src="/static/js/map.js"></script>
+<script type="text/javascript" src="/static/js/map.js"></script>
+<script type="text/javascript" src="/static/js/index.js"></script>
 {% end %}
