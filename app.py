@@ -1,13 +1,16 @@
 #-*-coding: utf-8-*-
 import os
 import json
+import datetime
 from tornado import web
 from tornado import gen
+from tornado import escape
 from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
 import workers
+from tornado.websocket import WebSocketHandler
 
 
 github_data = {}
@@ -100,7 +103,7 @@ class WorldMapHandler(ApiHandler):
         self.write(json.dumps(world_map, indent=4, separators=(',', ': ')))
 
 
-class GithubChinaHandler(ApiHandler):
+class GithubChinaHandler(WebSocketHandler):
     @asynchronous
     @gen.coroutine
     def post(self):
@@ -126,7 +129,59 @@ class AboutHandler(web.RequestHandler):
     @asynchronous
     def get(self):
         self.render("about.html")
+
+
+class ChinaSocketbHandler(WebSocketHandler):
+    def open(self):
+        self.callback = None
+        options.logger.info('start china websocket...')
+        self.write_message(json.dumps(workers.github_china))
+
+    def on_message(self, message):
+        options.logger.info('recieved message china')
+        message = escape.json_decode(message)
+        self.check(message)
+
+    def check(self, message):
+        if message == workers.github_china:
+            self.callback = tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(milliseconds=500),
+                lambda: self.check(message))
+        else:
+            options.logger.info("send message to china...")
+            self.write_message(json.dumps(workers.github_china))
+
+    def on_close(self):
+        if self.callback:
+            options.logger.warning("remove china timeout..")
+            tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
         
+
+class WorldSocketbHandler(WebSocketHandler):
+    def open(self):
+        self.callback = None
+        options.logger.info("start world websocket...")
+        self.write_message(json.dumps(workers.github_world))
+
+    def on_message(self, message):
+        options.logger.info("recieved world message")
+        message = escape.json_decode(message)
+        self.check(message)
+
+    def check(self, message):
+        if message == workers.github_world:
+            self.callback = tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(milliseconds=500),
+                lambda: self.check(message))
+        else:
+            options.logger.info("send message to world...")
+            self.write_message(json.dumps(workers.github_world))
+
+    def on_close(self):
+        if self.callback:
+            options.logger.warning("remove world timeout..")
+            tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
+
 
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), 'static'),
@@ -136,6 +191,8 @@ settings = {
 
 handlers = [
     (r"/", MainHandler),
+    (r"/socketchina", ChinaSocketbHandler),
+    (r"/socketworld", WorldSocketbHandler),
     (r"/githubchina", GithubChinaHandler),
     (r"/githubworld", GithubWorldHandler),
     (r"/chinamap", ChinaMapHandler),

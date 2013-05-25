@@ -4,6 +4,59 @@ $(document).ready(function(){
         $(this).tab("show");
     })
 
+    var updater = function(url, select) {
+        this.select = select;
+        this.url = "ws://" + location.host + url;
+        this.start = function(){
+            if ("WebSocket" in window) {
+                this.socket = new WebSocket(this.url);
+            } 
+            else if ("MozWebSocket" in window){
+                this.socket = new MozWebSocket(this.url);
+            }
+            if (this.socket != null){
+                var socket = this.socket;
+                var select = this.select;
+                socket.onmessage = function(event) {
+                    var data = JSON.parse(event.data);
+                    fill_table(data, select)
+                    socket.send(JSON.stringify(data));
+                    console.debug("send " + url);
+                };
+            }
+            else {
+                alert("websocket are not supported in your browser, chose chrome browser or firfox!");
+            }
+        }
+    }
+    var chinasocket = new updater("/socketchina", "#china-table");
+    var worldsocket = new updater("/socketworld", "#world-table");
+    chinasocket.start();
+    worldsocket.start();
+
+    function fill_table(data, select){
+        var github_table  = "<table class='table table-striped'><thead><tr>";
+        github_table +=  "<th>Rank</th>";
+        github_table +=  "<th>Name</th>";
+        github_table +=  "<th>Score</th>";
+        github_table +=  "<th>Language</th>";
+        github_table +=  "<th>Location</th>";
+        github_table +=  "<th>Profile</th>";
+        github_table += "</tr></thead><tr>";
+        for (var i in data){
+            var count = parseInt(i) + 1;
+            github_table += "<td class='solid'>#" + count + "</td>";
+            github_table += "<td class='solid'>" + "<a href='https://github.com/" + data[i]["login"] + "' target='_blank'>" + data[i]["login"] + "</a>" + "&nbsp(" + data[i]["name"] + ")" + "</td>";
+            github_table += "<td class='solid'>" + parseInt(data[i]["score"]) + "</td>";
+            github_table += "<td class='solid'>" + data[i]["language"] + "</td>";
+            github_table += "<td class='solid'>" + data[i]["location"] + "</td>";
+            github_table += "<td class='solid'>" + "<img height='48' width='48' src=" + data[i]["gravatar"] + "/>" + "</td>";
+            github_table +="</tr><tr>";
+        }
+        github_table += "</tr><table>";
+        $(select).html(github_table);
+    }
+
     function load_table(url){
         $.ajax({
             type: 'POST',
@@ -11,33 +64,16 @@ $(document).ready(function(){
             data: {"site": "Tornado-data"},
             dataType: "json",
             success: function(data){
-                var github_table  = "<table class='table table-striped'><thead><tr>";
-                github_table +=  "<th>Rank</th>";
-                github_table +=  "<th>Name</th>";
-                github_table +=  "<th>Score</th>";
-                github_table +=  "<th>Language</th>";
-                github_table +=  "<th>Location</th>";
-                github_table +=  "<th>Profile</th>";
-                github_table += "</tr></thead><tr>";
-                for (var i in data){
-                    var count = parseInt(i) + 1;
-                    github_table += "<td class='solid'>#" + count + "</td>";
-                    github_table += "<td class='solid'>" + "<a href='https://github.com/" + data[i]["login"] + "' target='_blank'>" + data[i]["login"] + "</a>" + "&nbsp(" + data[i]["name"] + ")" + "</td>";
-                    github_table += "<td class='solid'>" + parseInt(data[i]["score"]) + "</td>";
-                    github_table += "<td class='solid'>" + data[i]["language"] + "</td>";
-                    github_table += "<td class='solid'>" + data[i]["location"] + "</td>";
-                    github_table += "<td class='solid'>" + "<img height='48' width='48' src=" + data[i]["gravatar"] + "/>" + "</td>";
-                    github_table +="</tr><tr>";
-                }
-                github_table += "</tr><table>";
+                var select = null;
                 if (url.substring(7) == "world"){
-                    $("#world-table").html(github_table);
+                    select = "#world-table";
                 }else{
-                    $("#china-table").html(github_table);
+                    select = "#china-table";
                 }
+                fill_table(data, select);
             } 
         });
     }
-    load_table("/githubworld");
-    load_table("/githubchina");
+    //load_table("/githubworld");
+    //load_table("/githubchina");
 });
