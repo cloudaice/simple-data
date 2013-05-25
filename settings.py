@@ -16,7 +16,7 @@ define("contribution_url",
 
 city_list = [
     "heilongjiang", "jilin", "liaoning", "hebei", "shandong", "jiangsu", "zhejiang", "anhui",
-    "henan", "shanxi", "shanxii", "gansu", "hubei", "jiangxi", "fujian", "hunan", "guizou",
+    "henan", "shanxi", "shaanxi", "gansu", "hubei", "jiangxi", "fujian", "hunan", "guizou",
     "sichuan", "yunnan", "qinghai", "hainan", "shanghai", "chongqing", "tianjin", "beijing", "ningxia",
     "neimenggu", "guangxi", "xinjiang", "xizang", "guangdong", "xianggang", "taiwan", "aomen"]
 
