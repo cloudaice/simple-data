@@ -57,7 +57,7 @@ def update_china_user():
             contributions = yield contribute(user["login"])
             temp_github_china.append({
                 "login": user["login"],
-                "name": user["name"],
+                "name": user["name"] or "Unknown",
                 "location": user["location"],
                 "gravatar": "http://www.gravatar.com/avatar/" + user["gravatar_id"]
                 + urllib.urlencode({"s": 48}),
@@ -97,7 +97,7 @@ def update_world_user():
             contributions = yield contribute(user["login"])
             temp_github_world.append({
                 "login": user["login"],
-                "name": user["name"],
+                "name": user["name"] or "Unknown",
                 "location": user["location"],
                 "gravatar": "http://www.gravatar.com/avatar/" + user["gravatar_id"]
                 + urllib.urlencode({"s": 48}),
