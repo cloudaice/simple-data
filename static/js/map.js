@@ -1,25 +1,57 @@
 $(document).ready(function(){
-    function load_china_map(){
+    function load_china_map(select){
         $.ajax({
             type: 'POST',
             url: '/chinamap',
             data: {"site": "Tornado-data"},
             dataType: "json",
             success: function(data){
-                $('#ChinaMap').SVGMap({
-                    mapName: 'china',
-                    stateData: data,
-                    stateTipHtml: function(stateData, obj){
-                        return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
-                    },
-                    mapWidth: 960,
-                    mapHeight: 480
-                });
+                fill_map(data, select);
             }
         });
     }
 
-    load_china_map();
+    function fill_map(data, select){
+        $(select).SVGMap({
+            mapName: 'china',
+            stateData: data,
+            stateTipHtml: function(stateData, obj){
+                return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
+            },
+            mapWidth: 960,
+            mapHeight: 480
+        });
+
+    }
+
+    var updater = function(url, select) {
+        this.select = select;
+        this.url = "ws://" + location.host + url;
+        this.start = function(){
+            if ("WebSocket" in window) {
+                this.socket = new WebSocket(this.url);
+            } 
+            else if ("MozWebSocket" in window){
+                this.socket = new MozWebSocket(this.url);
+            }
+            if (this.socket != null){
+                var socket = this.socket;
+                var select = this.select;
+                socket.onmessage = function(event) {
+                    var data = JSON.parse(event.data);
+                    fill_map(data, select);
+                    socket.send(JSON.stringify(data));
+                    console.debug("send " + url);
+                };
+            }
+            else {
+                alert("websocket are not supported in your browser, chose chrome browser or firfox!");
+            }
+        }
+    }
+    var chinamapsocket = new updater("/chinamap", "#ChinaMap");
+    chinamapsocket.start();
+    //load_china_map();
 /*
     $('#WorldMap').SVGMap({
         mapName: 'world',

@@ -34,10 +34,22 @@ class ApiHandler(web.RequestHandler):
         pass
 
 
-class ChinaMapHandler(ApiHandler):
-    @asynchronous
-    @gen.coroutine
-    def post(self):
+class ChinaMapHandler(WebSocketHandler):
+    handlers = 0
+
+    def open(self):
+        ChinaMapHandler.handlers += 1
+        options.logger.info("chinamaps sockets is %d" % ChinaMapHandler.handlers)
+        message = []
+        self.write_message(json.dumps(message))
+
+    def on_message(self, message):
+        self.callback = None
+        options.logger.info('recieved message china')
+        message = escape.json_decode(message)
+        self.check(message)
+
+    def check(self, message):
         china_map = {}
         for city in options.city_list:
             china_map[city] = {"score": 0, "stateInitColor": 6}
@@ -73,9 +85,21 @@ class ChinaMapHandler(ApiHandler):
             elif china_map[city]['score'] >= 200:
                 china_map[city]['stateInitColor'] = 0
 
-        self.write(json.dumps(china_map, indent=4, separators=(',', ': ')))
+        if message == china_map:
+            self.callback = tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(milliseconds=500),
+                lambda: self.check(message))
+        else:
+            options.logger.info("send message to chinamap...")
+            self.write_message(json.dumps(china_map))
+            
+    def on_close(self):
+        ChinaMapHandler.handlers -= 1
+        if self.callback:
+            options.logger.warning("remove chinamap timeout..")
+            tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
-                
+
 class WorldMapHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
@@ -132,7 +156,11 @@ class AboutHandler(web.RequestHandler):
 
 
 class ChinaSocketbHandler(WebSocketHandler):
+    handlers = 0
+
     def open(self):
+        ChinaSocketbHandler.handlers += 1
+        options.logger.info("china sockets is %d" % ChinaSocketbHandler.handlers)
         self.callback = None
         options.logger.info('start china websocket...')
         self.write_message(json.dumps(workers.github_china))
@@ -152,13 +180,18 @@ class ChinaSocketbHandler(WebSocketHandler):
             self.write_message(json.dumps(workers.github_china))
 
     def on_close(self):
+        ChinaSocketbHandler.handlers -= 1
         if self.callback:
             options.logger.warning("remove china timeout..")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
         
 
 class WorldSocketbHandler(WebSocketHandler):
+    handlers = 0
+
     def open(self):
+        WorldSocketbHandler.handlers += 1
+        options.logger.info("world sockets is %d" % WorldSocketbHandler.handlers)
         self.callback = None
         options.logger.info("start world websocket...")
         self.write_message(json.dumps(workers.github_world))
@@ -178,6 +211,7 @@ class WorldSocketbHandler(WebSocketHandler):
             self.write_message(json.dumps(workers.github_world))
 
     def on_close(self):
+        WorldSocketbHandler.handlers -= 1
         if self.callback:
             options.logger.warning("remove world timeout..")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
