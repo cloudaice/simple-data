@@ -1,7 +1,6 @@
 demo/
 .anvil/
 logs/
-config.py
 note
 *.pyc
 .env
