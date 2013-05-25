@@ -5,7 +5,7 @@ import logging as logs
 
 define("port", default=8000)
 
-define("debug", True)
+define("debug", False)
 
 define("logger", logs.getLogger("Tornado-data"))
 
