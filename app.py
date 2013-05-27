@@ -11,6 +11,8 @@ import tornado.ioloop
 import tornado.log
 import workers
 from tornado.websocket import WebSocketHandler
+from libs.geo import collect_geoname
+from tornado.httpclient import AsyncHTTPClient
 
 
 github_data = {}
@@ -34,22 +36,40 @@ class ApiHandler(web.RequestHandler):
         pass
 
 
+class Geo(ApiHandler):
+    @asynchronous
+    @gen.coroutine
+    def get(self):
+        client = AsyncHTTPClient()
+        resp = yield client.fetch("http://api.geonames.org/searchJSON?q=sichuan&maxRows=10&username=cloudaice")
+        try:
+            resp = json.loads(resp.body)
+        except ValueError:
+            resp = resp.body
+        print resp
+        self.write(resp)
+        self.finish()
+
+
 class ChinaMapHandler(WebSocketHandler):
     handlers = 0
 
     def open(self):
         ChinaMapHandler.handlers += 1
         options.logger.info("chinamaps sockets is %d" % ChinaMapHandler.handlers)
+        self.callback = None
+        options.logger.info("start chinamap websocket...")
         message = []
         self.write_message(json.dumps(message))
 
     def on_message(self, message):
-        self.callback = None
-        options.logger.info('recieved message china')
+        options.logger.info('recieved message chinamap')
         message = escape.json_decode(message)
         self.check(message)
 
+    @gen.coroutine
     def check(self, message):
+        """
         china_map = {}
         for city in options.city_list:
             china_map[city] = {"score": 0, "stateInitColor": 6}
@@ -70,6 +90,9 @@ class ChinaMapHandler(WebSocketHandler):
                 if city in location:
                     china_map[city]['score'] += 1
                     break
+        """
+        china_map = yield collect_geoname()
+        print "yield ok"
 
         for city in china_map:
             if china_map[city]['score'] > 0 and china_map[city]['score'] < 5:
@@ -232,6 +255,7 @@ handlers = [
     (r"/chinamap", ChinaMapHandler),
     (r"/worldmap", WorldMapHandler),
     (r"/about", AboutHandler),
+    (r"/geo", Geo),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ]
 
