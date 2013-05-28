@@ -43,6 +43,9 @@ $(document).ready(function(){
                     socket.send(JSON.stringify(data));
                     console.debug("send " + url);
                 };
+                socket.onclose = function(event){
+                    socket.close();
+                };
             }
             else {
                 alert("websocket are not supported in your browser, chose chrome browser or firfox!");
