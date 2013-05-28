@@ -7,6 +7,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.options import options
 import tornado.ioloop
 from libs.client import GetPage, sync_loop_call, formula
+from libs.geo import match_geoname
 
 
 #parse_config_file("config.py")
@@ -16,6 +17,11 @@ temp_github_world = []
 temp_github_china = []
 current_china_page = 1
 current_world_page = 1
+
+china_location_map = {}
+china_map = {}
+for city in options.city_list:
+    china_map[city] = {"score": 0, "stateInitColor": 6}
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
@@ -78,7 +84,7 @@ def update_china_user():
         current_china_page = 1
         options.logger.info("china loop end")
     else:
-        options.logger.error("get chine user error on page %d, error code %d, %s" %
+        options.logger.error("get china user error on page %d, error code %d, %s" %
                              (current_china_page, resp.code, resp.message))
 
 
@@ -139,7 +145,35 @@ def search_world(page):
     raise gen.Return(resp)
 
 
+@sync_loop_call(10 * 1000)
+@gen.coroutine
+def update_china_location():
+    global china_location_map
+    global china_map
+    temp_china_map = {}
+    for city in options.city_list:
+        temp_china_map[city] = {"score": 0, "stateInitColor": 6}
+
+    for user in github_china:
+        try:
+            location = user["location"].lower()
+            location = ''.join(location.split(' '))
+        except Exception, e:
+            options.logger.error("lower location error %s" % e)
+            continue
+        if location in china_location_map:
+            city = china_location_map[location]
+        else:
+            city = yield match_geoname(location)
+        if city:
+            temp_china_map[city]["score"] += 1
+        else:
+            options.logger.warning("%s can't matched" % location)
+    china_map = temp_china_map.copy()
+
+
 if __name__ == "__main__":
     update_china_user()
     update_world_user()
+    update_china_location()
     tornado.ioloop.IOLoop.instance().start()
