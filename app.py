@@ -9,15 +9,16 @@ from tornado.web import asynchronous
 from tornado.options import parse_command_line, options, parse_config_file
 import tornado.ioloop
 import tornado.log
-import workers
 from tornado.websocket import WebSocketHandler
-from libs.geo import collect_geoname
+from libs.geo import GeoFetch
 from tornado.httpclient import AsyncHTTPClient
-
+from test import Get
 
 github_data = {}
 parse_config_file("config.py")
 parse_config_file("settings.py")
+
+import workers
 
 
 class ApiHandler(web.RequestHandler):
@@ -36,21 +37,6 @@ class ApiHandler(web.RequestHandler):
         pass
 
 
-class Geo(ApiHandler):
-    @asynchronous
-    @gen.coroutine
-    def get(self):
-        client = AsyncHTTPClient()
-        resp = yield client.fetch("http://api.geonames.org/searchJSON?q=sichuan&maxRows=10&username=cloudaice")
-        try:
-            resp = json.loads(resp.body)
-        except ValueError:
-            resp = resp.body
-        print resp
-        self.write(resp)
-        self.finish()
-
-
 class ChinaMapHandler(WebSocketHandler):
     handlers = 0
 
@@ -67,32 +53,8 @@ class ChinaMapHandler(WebSocketHandler):
         message = escape.json_decode(message)
         self.check(message)
 
-    @gen.coroutine
     def check(self, message):
-        """
-        china_map = {}
-        for city in options.city_list:
-            china_map[city] = {"score": 0, "stateInitColor": 6}
-
-        for user in workers.github_china:
-            try:
-                location = user["location"].lower()
-            except Exception, e:
-                options.logger.error("location error: %s" % e)
-                continue
-            for city in options.city_list:
-                if "hangzhou" in location:
-                    china_map["zhejiang"]["score"] += 1
-                    break
-                if "harbin" in location:
-                    china_map['heilongjiang']["score"] += 1
-                    break
-                if city in location:
-                    china_map[city]['score'] += 1
-                    break
-        """
-        china_map = yield collect_geoname()
-        print "yield ok"
+        china_map = workers.china_map.copy()
 
         for city in china_map:
             if china_map[city]['score'] > 0 and china_map[city]['score'] < 5:
@@ -255,13 +217,13 @@ handlers = [
     (r"/chinamap", ChinaMapHandler),
     (r"/worldmap", WorldMapHandler),
     (r"/about", AboutHandler),
-    (r"/geo", Geo),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ]
 
 app = web.Application(handlers, **settings)
 workers.update_china_user()
 workers.update_world_user()
+workers.update_china_location()
 
 if __name__ == "__main__":
     parse_command_line()
