@@ -18,7 +18,7 @@ $(document).ready(function(){
             stateTipHtml: function(stateData, obj){
                 return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
             },
-            mapWidth: 960,
+            mapWidth: 720,
             mapHeight: 480
         });
 
