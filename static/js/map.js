@@ -41,7 +41,6 @@ $(document).ready(function(){
                     var data = JSON.parse(event.data);
                     fill_map(data, select);
                     socket.send(JSON.stringify(data));
-                    console.debug("send " + url);
                 };
                 socket.onclose = function(event){
                     socket.close();

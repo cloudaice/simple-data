@@ -56,7 +56,11 @@ $(document).ready(function(){
             github_table +="</tr><tr>";
         }
         github_table += "</tr><table>";
-        $(select).html(github_table);
+        if (data.length == 0){
+            $(select).html("<div class='progress progress-striped active'><div class='bar' style='width: 40%;'></div></div>");
+        }else{
+            $(select).html(github_table);
+        }
     }
 
     function load_table(url){
