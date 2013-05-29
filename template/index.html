@@ -1,39 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Github Data{% end %}
 {% block content %} 
-<div class="row-fluid">
-    <div class="span6 offset3">
-        <ul id="myTab" class="nav nav-pills">
-            <li class="active"><a href="#chinamap">China Map</a></li>
-            <li class=""><a href="#chinarank">China Rank</a></li>
-            <li class=""><a href="#worldrank">World Rank</a></li>
-        </ul>
-    </div>
-</div>
-<div class = "tab-content" >
-    <div id="chinamap" class="tab-pane active">
-        <div class="row-fluid">
-            <div class="span10 offset1">
-                <div id="ChinaMap"></div>
-            </div>
+<div class="tabbable tabs-left">
+    <ul id="myTab" class="nav nav-tabs">
+        <li class="active"><a href="#chinamap">China Map</a></li>
+        <li class="disabled"><a href="#worldmap">World Map</a></li>
+        <li class=""><a href="#chinarank">China Rank</a></li>
+        <li class=""><a href="#worldrank">World Rank</a></li>
+    </ul>
+    <div class="tab-content" >
+        <div id="chinamap" class="tab-pane active">
+            <div id="ChinaMap"></div>
+        </div>
+        <div id="chinarank" class="tab-pane">
+            <div id="china-table"></div>
+        </div>
+        <div id="worldrank" class="tab-pane">
+            <div id="world-table"></div>
         </div>
     </div>
-    <div id="chinarank" class="tab-pane">
-        <div class="row-fluid">
-            <div class="span10 offset1">
-                <div id="china-table">
-                </div>
-            </div>
-        </div>
-    </div>
-    <div id="worldrank" class="tab-pane">
-        <div class="row"> 
-            <div class="span10 offset1">
-                <div id="world-table"></div>
-            </div>
-        </div>
-    </div>
-</div>
 </div>
 {% end %}
 {% block script %}
