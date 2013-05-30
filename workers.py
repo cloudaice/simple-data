@@ -150,7 +150,7 @@ def search_world(page):
 def update_china_location():
     global china_location_map
     global china_map
-    if not china_location_map:  # 获取gists文件
+    if not china_location_map:  # Fetch location_map file
         resp = yield GetPage(options.api_url + "/gists/5677947")
         if resp.code == 200:
             resp = escape.json_decode(resp.body)
@@ -163,7 +163,7 @@ def update_china_location():
                                      (resp.code, resp.message))
         else:
             options.logger.error("Get gist error %d, %s" % (resp.code, resp.message))
-    else:  # 更新gists文件
+    else:  # update location_map file
         resp = yield update_file(options.api_url + "/gists/5677947",
                                  "location_map.json",
                                  china_location_map)
