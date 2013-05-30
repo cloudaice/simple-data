@@ -7,7 +7,7 @@ from tornado.httpclient import AsyncHTTPClient
 from tornado.options import options
 import tornado.ioloop
 from libs.client import GetPage, sync_loop_call, formula, update_file
-from libs.geo import match_geoname
+from libs.geo import match_geoname, match_world_geoname
 
 
 #parse_config_file("config.py")
@@ -22,6 +22,13 @@ china_location_map = {}
 china_map = {}
 for city in options.city_list:
     china_map[city] = {"score": 0, "stateInitColor": 6}
+
+world_location_map = {}
+world_map = {}
+for country_code in options.country_code_list:
+    world_map[country_code] = {"score": 0, "staticInitColor": 6}
+
+
 AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
 
 
@@ -145,7 +152,7 @@ def search_world(page):
     raise gen.Return(resp)
 
 
-@sync_loop_call(10 * 1000)
+@sync_loop_call(50 * 1000)
 @gen.coroutine
 def update_china_location():
     global china_location_map
@@ -187,10 +194,61 @@ def update_china_location():
         if city:
             temp_china_map[city]["score"] += 1
             china_location_map[location] = city
-            options.logger.info("keyword: %s matched %s" % (location, city))
+            options.logger.info("location: %s matched %s" % (location, city))
         else:
-            options.logger.warning("keyword: %s can't match" % location)
+            options.logger.warning("location: %s can't match" % location)
     china_map = temp_china_map.copy()
+
+
+@sync_loop_call(10 * 1000)
+@gen.coroutine
+def update_world_location():
+    global world_location_map
+    global world_map
+    if not world_location_map:  # get file into world_location_map
+        resp = yield GetPage(options.api_url + "/gists/5681176")
+        if resp.code == 200:
+            resp = escape.json_decode(resp.body)
+            raw_url = resp["files"]["world_location_map.json"]['raw_url']
+            resp = yield GetPage(raw_url)
+            if resp.code == 200:
+                world_location_map = escape.json_decode(resp.body)
+            else:
+                options.logger.error("Fetch raw data error %d, %s" %
+                                     (resp.code, resp.message))
+        else:
+            options.logger.error("Get gist error %d, %s" %
+                                 (resp.code, resp.message))
+    else:  # update world_location_map file")
+        resp = yield update_file(options.api_url + "/gists/5681176",
+                                 "world_location_map.json",
+                                 world_location_map)
+        if resp.code != 200:
+            options.logger.error("update gists error %d, %s" %
+                                (resp.code, resp.message))
+
+    temp_world_map = {}
+    for country_code in options.country_code_list:
+        temp_world_map[country_code] = {"score": 0, "staticInitColor": 6}
+
+    for user in github_world:
+        try:
+            location = user["location"].lower()
+            location = ','.join(filter(lambda d: d,
+                                ','.join(location.strip().split()).split(',')))
+        except Exception, e:
+            options.logger.error("Error: %s" % e)
+            continue
+        if location in world_location_map:
+            country_code = world_location_map[location]
+        else:
+            country_code = match_world_geoname(location)
+        if country_code:
+            temp_world_map[country_code]["score"] += 1
+            world_location_map[location] = country_code
+            options.logger.info("location: %s matched %s" % (location, country_code))
+        else:
+            options.logger.warning("location: %s can't match" % location)
 
 
 if __name__ == "__main__":
