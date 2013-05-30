@@ -117,14 +117,15 @@ def commit(url, message, data):
 def update_file(gist_url, filename, data):
     try:
         body = json.dumps({
-            "description": "update users file $s" % filename,
+            "description": "update file at %s" %
+                           datetime.datetime.utcfromtimestamp(time.time()),
             "files": {
                 filename: {
-                    "content": json.dumps(data)
+                    "content": json.dumps(data, indent=4, separators=(',', ': '))
                 }
             }
         })
     except Exception, e:
         options.logger.error("Error: %s" % e)
-    resp = yield PatchPage(options.users_url, body)
+    resp = yield PatchPage(gist_url, body)
     raise gen.Return(resp)
