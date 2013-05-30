@@ -219,7 +219,8 @@ def update_world_location():
         else:
             options.logger.error("Get gist error %d, %s" %
                                  (resp.code, resp.message))
-    else:  # update world_location_map file")
+
+    else:  # update world_location_map file
         resp = yield update_file(options.api_url + "/gists/5681176",
                                  "world_location_map.json",
                                  world_location_map)
