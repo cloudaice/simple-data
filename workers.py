@@ -6,7 +6,7 @@ from tornado.httpclient import AsyncHTTPClient
 #from tornado.options import parse_config_file
 from tornado.options import options
 import tornado.ioloop
-from libs.client import GetPage, sync_loop_call, formula
+from libs.client import GetPage, sync_loop_call, formula, update_file
 from libs.geo import match_geoname
 
 
@@ -150,6 +150,25 @@ def search_world(page):
 def update_china_location():
     global china_location_map
     global china_map
+    if not china_location_map:  # 获取gists文件
+        resp = yield GetPage(options.api_url + "/gists/5677947")
+        if resp.code == 200:
+            resp = escape.json_decode(resp.body)
+            raw_url = resp['files']['location_map.json']['raw_url']
+            resp = yield GetPage(raw_url)
+            if resp.code == 200:
+                china_location_map = escape.json_decode(resp.body)
+            else:
+                options.logger.error("Fetch raw data error %d, %s" %
+                                     (resp.code, resp.message))
+        else:
+            options.logger.error("Get gist error %d, %s" % (resp.code, resp.message))
+    else:  # 更新gists文件
+        resp = yield update_file(options.api_url + "/gists/5677947",
+                                 "location_map.json",
+                                 china_location_map)
+        if resp.code != 200:
+            options.logger.error("update gists error %d, %s" % (resp.code, resp.message))
     temp_china_map = {}
     for city in options.city_list:
         temp_china_map[city] = {"score": 0, "stateInitColor": 6}
@@ -157,7 +176,7 @@ def update_china_location():
     for user in github_china:
         try:
             location = user["location"].lower()
-            location = ''.join(location.split(' '))
+            location = ','.join(location.strip().split())
         except Exception, e:
             options.logger.error("lower location error %s" % e)
             continue
@@ -167,8 +186,10 @@ def update_china_location():
             city = yield match_geoname(location)
         if city:
             temp_china_map[city]["score"] += 1
+            china_location_map[location] = city
+            options.logger.info("keyword: %s matched %s" % (location, city))
         else:
-            options.logger.warning("%s can't matched" % location)
+            options.logger.warning("keyword: %s can't match" % location)
     china_map = temp_china_map.copy()
 
 
