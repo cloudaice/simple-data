@@ -13,7 +13,7 @@ $(document).ready(function(){
 
     function fill_map(data, select){
         $(select).SVGMap({
-            mapName: select.substring(1).toLowerCase(),
+            mapName: select.substring(1, 6).toLowerCase(),
             stateData: data,
             stateTipHtml: function(stateData, obj){
                 return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
@@ -21,7 +21,6 @@ $(document).ready(function(){
             mapWidth: 720,
             mapHeight: 480
         });
-
     }
 
     var updater = function(url, select) {
@@ -68,8 +67,8 @@ $(document).ready(function(){
         mapWidth: 720,
         mapHeight: 480
     });
-});
 */
+});
     //load_china_map();
 /*
          {
