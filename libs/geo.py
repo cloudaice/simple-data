@@ -49,15 +49,10 @@ def match_geoname(location):
         resp = yield GeoFetch(location)
         if resp.code == 200:
             resp = escape.json_decode(resp.body)
-            options.logger.info(resp)
             for geo in resp.get("geonames", []):
                 if matched_city is None:
                     for city in options.city_list:
-                        if match_location(city, geo.get("adminName1", "NoAdminName")):
+                        if match_location(city, geo.get("adminName1", "NoName").lower()):
                             matched_city = city
                             break
-    if matched_city:
-        options.logger.info("keyword: %s matched %s" % (location, matched_city))
-    else:
-        options.logger.info("keyword: %s can't match" % location)
     raise gen.Return(matched_city)
