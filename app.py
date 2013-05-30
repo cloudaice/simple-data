@@ -86,31 +86,51 @@ class ChinaMapHandler(WebSocketHandler):
 
 
 class WorldMapHandler(ApiHandler):
-    @asynchronous
-    @gen.coroutine
-    def post(self):
-        world_map = {}
-        for country in options.country_list:
-            world_map[country] = {"score": 0, "stateInitColor": 6}
-        for user in workers.github_world:
-            try:
-                location = user["location"].lower()
-            except Exception, e:
-                options.logger.error("location error: %s" % e)
-                continue
-            for country in options.country_list:
-                if country in location:
-                    world_map[country]["score"] += 1
-                    break
-        top_score = max([world_map[country]["score"] for country in world_map])
-        capture = top_score / 6
-        if capture == 0:
-            capture = 1
-        for country in world_map:
-            world_map[country]["stateInitColor"] = 6 - world_map[country]["score"] / capture
-        
-        self.write(json.dumps(world_map, indent=4, separators=(',', ': ')))
+    handlers = 0
 
+    def open(self):
+        WorldMapHandler.handlers += 1
+        options.logger.info("worldmaps sockets is %d " % WorldMapHandler.handlers)
+        self.callback = None
+        options.logger.info("start worldmap websocket...")
+        message = []
+        self.write_message(json.dumps(message))
+
+    def on_message(self, message):
+        options.logger.info("recieved message worldmap")
+        message = escape.json_decode(message)
+        self.check(message)
+
+    def check(self, message):
+        world_map = workers.world_map.copy()
+
+        for country_code in world_map:
+            if world_map[country_code]["score"] > 0 and world_map[country_code]["score"] < 5:
+                world_map[country_code]["stateInitColor"] = 5
+            elif world_map[country_code]["score"] >= 5 and world_map[country_code]["score"] < 10:
+                world_map[country_code]["stateInitColor"] = 4
+            elif world_map[country_code]["score"] >= 10 and world_map[country_code]["score"] < 50:
+                world_map[country_code]["stateInitColor"] = 3
+            elif world_map[country_code]["score"] >= 50 and world_map[country_code]["score"] < 100:
+                world_map[country_code]["stateInitColor"] = 2
+            elif world_map[country_code]["score"] >= 100 and world_map[country_code]["score"] < 200:
+                world_map[country_code]["stateInitColor"] = 1
+            elif world_map[country_code]["score"] >= 200:
+                world_map[country_code]["stateInitColor"] = 0
+        if message == world_map:
+            self.callback = tornado.ioloop.IOLoop.instance().add_timeout(
+                datetime.timedelta(milliseconds=500),
+                lambda: self.check(message))
+        else:
+            options.logger.info("send message to worldmap")
+            self.write(json.dumps(world_map))
+
+    def on_close(self):
+        WorldMapHandler.handlers -= 1
+        if self.callback:
+            options.logger.warning("remove worldmap timeout...")
+            tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
+            
 
 class GithubChinaHandler(WebSocketHandler):
     @asynchronous
@@ -224,6 +244,7 @@ app = web.Application(handlers, **settings)
 workers.update_china_user()
 workers.update_world_user()
 workers.update_china_location()
+workers.update_world_location()
 
 if __name__ == "__main__":
     parse_command_line()
