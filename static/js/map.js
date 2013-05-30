@@ -13,7 +13,7 @@ $(document).ready(function(){
 
     function fill_map(data, select){
         $(select).SVGMap({
-            mapName: 'china',
+            mapName: select.substring(1).toLowerCase(),
             stateData: data,
             stateTipHtml: function(stateData, obj){
                 return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
@@ -52,19 +52,25 @@ $(document).ready(function(){
         }
     }
     var chinamapsocket = new updater("/chinamap", "#ChinaMap");
+    var worldmapsocket = new updater("/worldmap", "#WorldMap");
     chinamapsocket.start();
-    //load_china_map();
+    worldmapsocket.start();
+
 /*
     $('#WorldMap').SVGMap({
         mapName: 'world',
         stateData: {
             'CN': {'stateInitColor': 0, 'score': 0}
         },
-        mapWidth: 600,
-        mapHeight: 400
+        stateTipHtml: function(stateData, obj){
+            return obj.name + ": " + ((stateData)[obj.id] && (stateData)[obj.id].score || "0");
+        },
+        mapWidth: 720,
+        mapHeight: 480
     });
-*/
 });
+*/
+    //load_china_map();
 /*
          {
         'heilongjiang': {'stateInitColor': 0, 'score': 0},
