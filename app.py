@@ -85,7 +85,7 @@ class ChinaMapHandler(WebSocketHandler):
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
-class WorldMapHandler(ApiHandler):
+class WorldMapHandler(WebSocketHandler):
     handlers = 0
 
     def open(self):
