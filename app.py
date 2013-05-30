@@ -123,7 +123,7 @@ class WorldMapHandler(WebSocketHandler):
                 lambda: self.check(message))
         else:
             options.logger.info("send message to worldmap")
-            self.write(json.dumps(world_map))
+            self.write_message(json.dumps(world_map))
 
     def on_close(self):
         WorldMapHandler.handlers -= 1
