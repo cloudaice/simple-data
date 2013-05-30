@@ -51,3 +51,18 @@ country_list = [
     'South Africa', 'Zambia', 'Zimbabwe']
 
 define("country_list", country_list)
+
+country_code_list = [
+    "AE", "AF", "AL", "AM", "AO", "AR", "AT", "AU", "AZ", "BA", "BD", "BE", "BF", "BG", "BI", "BJ",
+    "BN", "BO", "BR", "BT", "BW", "BY", "BZ", "CA", "CD", "CF", "CG", "CH", "CI", "CL", "CM", "CN",
+    "CO", "CR", "CU", "CY", "CZ", "DE", "DJ", "DK", "DO", "DZ", "EC", "EE", "EG", "EH", "ER", "ES",
+    "ET", "FI", "FJ", "FK", "FR", "GA", "GB", "GE", "GF", "GH", "GL", "GM", "GN", "GQ", "GR", "GT",
+    "GW", "GY", "HN", "HR", "HT", "HU", "ID", "IE", "IL", "IN", "IQ", "IR", "IS", "IT", "JM", "JO",
+    "JP", "KE", "KG", "KH", "KP", "KR", "KW", "KZ", "LA", "LB", "LK", "LR", "LS", "LT", "LU", "LV",
+    "LY", "MA", "MD", "MG", "MK", "ML", "MM", "MN", "MR", "MW", "MX", "MY", "MZ", "NA", "NC", "NE",
+    "NG", "NI", "NL", "NO", "NP", "NZ", "OM", "PA", "PE", "PG", "PH", "PK", "PL", "PR", "PS", "PT",
+    "PY", "QA", "RO", "RS", "RU", "RW", "SA", "SB", "SD", "SE", "SJ", "SK", "SL", "SN", "SO", "SR",
+    "SV", "SY", "SZ", "TD", "TG", "TH", "TJ", "TL", "TM", "TN", "TR", "TW", "TZ", "UA", "UG", "US",
+    "UY", "UZ", "VE", "VN", "VU", "YE", "ZA", "ZM", "ZW"]
+
+define("country_code_list", country_code_list)
