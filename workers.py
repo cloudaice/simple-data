@@ -233,9 +233,9 @@ def update_world_location():
 
     for user in github_world:
         try:
-            location = user["location"].lower()
+            location = user["location"].strip()
             location = ','.join(filter(lambda d: d,
-                                ','.join(location.strip().split()).split(',')))
+                                ','.join(location.split()).split(',')))
         except Exception, e:
             options.logger.error("Error: %s" % e)
             continue
