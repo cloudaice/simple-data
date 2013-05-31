@@ -158,7 +158,7 @@ def update_china_location():
     global china_location_map
     global china_map
     if not china_location_map:  # Fetch location_map file
-        resp = yield GetPage(options.api_url + "/gists/5677947")
+        resp = yield GetPage(options.api_url + options.location_map_gist)
         if resp.code == 200:
             resp = escape.json_decode(resp.body)
             raw_url = resp['files']['location_map.json']['raw_url']
@@ -171,7 +171,7 @@ def update_china_location():
         else:
             options.logger.error("Get gist error %d, %s" % (resp.code, resp.message))
     else:  # update location_map file
-        resp = yield update_file(options.api_url + "/gists/5677947",
+        resp = yield update_file(options.api_url + options.location_map_gist,
                                  "location_map.json",
                                  china_location_map)
         if resp.code != 200:
@@ -210,7 +210,7 @@ def update_world_location():
     global world_location_map
     global world_map
     if not world_location_map:  # get file into world_location_map
-        resp = yield GetPage(options.api_url + "/gists/5681176")
+        resp = yield GetPage(options.api_url + options.world_location_map_gist)
         if resp.code == 200:
             resp = escape.json_decode(resp.body)
             raw_url = resp["files"]["world_location_map.json"]['raw_url']
@@ -225,7 +225,7 @@ def update_world_location():
                                  (resp.code, resp.message))
 
     else:  # update world_location_map file
-        resp = yield update_file(options.api_url + "/gists/5681176",
+        resp = yield update_file(options.api_url + options.world_location_map_gist,
                                  "world_location_map.json",
                                  world_location_map)
         if resp.code != 200:
