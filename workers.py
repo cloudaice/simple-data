@@ -187,6 +187,9 @@ def update_china_location():
         except Exception, e:
             options.logger.error("lower location error %s" % e)
             continue
+        # because acording to geoname match china will match to shanghai
+        if location == "china":
+            continue
         if location in china_location_map:
             city = china_location_map[location]
         else:
@@ -194,7 +197,6 @@ def update_china_location():
         if city:
             temp_china_map[city]["score"] += 1
             china_location_map[location] = city
-            options.logger.info("location: %s matched %s" % (location, city))
         else:
             options.logger.warning("location: %s can't match" % location)
 
@@ -235,6 +237,8 @@ def update_world_location():
         temp_world_map[country_code] = {"score": 0, "staticInitColor": 6}
 
     for user in github_world:
+        if not user["location"]:
+            continue
         try:
             location = user["location"].strip()
             location = ','.join(filter(lambda d: d,
@@ -249,7 +253,6 @@ def update_world_location():
         if country_code:
             temp_world_map[country_code]["score"] += 1
             world_location_map[location] = country_code
-            options.logger.info("location: %s matched %s" % (location, country_code))
         else:
             options.logger.warning("location: %s can't match" % location)
 
