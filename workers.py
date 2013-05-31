@@ -197,12 +197,14 @@ def update_china_location():
             options.logger.info("location: %s matched %s" % (location, city))
         else:
             options.logger.warning("location: %s can't match" % location)
+
     china_map = temp_china_map.copy()
 
 
-@sync_loop_call(10 * 1000)
+@sync_loop_call(50 * 1000)
 @gen.coroutine
 def update_world_location():
+    options.logger.info("start update world_location")
     global world_location_map
     global world_map
     if not world_location_map:  # get file into world_location_map
@@ -243,13 +245,15 @@ def update_world_location():
         if location in world_location_map:
             country_code = world_location_map[location]
         else:
-            country_code = match_world_geoname(location)
+            country_code = yield match_world_geoname(location)
         if country_code:
             temp_world_map[country_code]["score"] += 1
             world_location_map[location] = country_code
             options.logger.info("location: %s matched %s" % (location, country_code))
         else:
             options.logger.warning("location: %s can't match" % location)
+
+    world_map = temp_world_map.copy()
 
 
 if __name__ == "__main__":
