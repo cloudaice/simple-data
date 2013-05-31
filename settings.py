@@ -66,3 +66,7 @@ country_code_list = [
     "UY", "UZ", "VE", "VN", "VU", "YE", "ZA", "ZM", "ZW"]
 
 define("country_code_list", country_code_list)
+
+define("location_map_gist", "/gists/5677947")
+
+define("world_location_map_gist", "/gists/5681176")
