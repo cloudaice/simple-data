@@ -5,11 +5,13 @@ Make Data Simple Beautiful
 Github用户活跃度排名
 --------------------
 
++ 中国大陆地区Github用户分布地图 
+
++ 世界范围内的Github用户分布地图
+
 + 中国大陆地区Github用户活跃度排名
 
 + 世界Github用户排名
-
-+ 中国大陆地区Github用户分布地图 
 
 
 
@@ -18,7 +20,7 @@ Github用户活跃度排名
 
 + Python Tornado 框架，利用gen模块的coroune异步抓取数据
 
-+ 结合使用Github API 和网页抓取
++ 结合使用Github API 搜索前followers前1000的用户, 结合网页抓取。
 
 + 部署在heroku上
 
@@ -38,17 +40,20 @@ Score:
 
     Score = Formula(followers) + Contributions
 
-首先抓取followers排名前1000的用户，然后再使用公式计算Score值。对folloers有一定依赖，
-但主要看contributions。
+首先抓取followers排名前1000的用户，然后再使用公式计算Score值。
+因此folloers排名进不了前1000，根本不会进入到score计算阶段，
+之后主要看contributions。
 
 
 
 TODO
 ----
 
-+ 完善Github用户所在地分析
++ 完善Github用户所在地分析 (#已完成)
 
-+ 增加世界范围内用户分布地图
++ 增加世界范围内用户分布地图 (#已完成)
+
++ 其它比较酷的功能(还在发现中)
 
 
 
@@ -58,7 +63,9 @@ TODO
 [data.cloudaice.com](http://data.cloudaice.com)。
 
 
-**注**: 如果打不开，请使用梯子。
+**注**: 由于heroku不支持websocket，因此在线服务版本始终为websocket以前的版本。
+目前在寻找免费的支持websocket的云平台。
+如果打不开，请使用梯子。
 
 
 
@@ -74,3 +81,9 @@ TODO
 
 + 使用`geonames.org`进行模糊地名匹配
 + 修复没有`name`显示为空的bug
+
+####2013-05-31
+
++ 增加了世界范围内的分布显示
++ 增加模糊匹配缓存文件
++ 修改默认china匹配到上海的bug
