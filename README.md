@@ -41,9 +41,26 @@ Score:
     Score = Formula(followers) + Contributions
 
 首先抓取followers排名前1000的用户，然后再使用公式计算Score值。
-因此folloers排名进不了前1000，根本不会进入到score计算阶段，
-之后主要看contributions。
+因此followers排名进不了前1000，根本不会进入到score计算阶段，
+设计这样的计算公式的原因是考虑到followers在前期的增长含金量比较高，
+而之后的增加主要是影响力因素，因此，如果你在github初露锋芒，
+那么folloers的增加会导致score疯狂上涨。
 
+
+地名匹配
+--------
+
+这是一个比较头痛的事情，也是花费时间最长的步骤。因为每个用户的地名都不一定提到关键省份，
+例如在`hangzhou`的用户就习惯直接写`hangzhou`，而不会提及`zhejiang`。
+因此这里需要能够模糊匹配的库。
+后来在`http://www.geonames.org/`上找到开放接口，通过查询API可以得到简单的模糊匹配结果。
+然后在内存中建立缓存，将匹配成功的地名分别update到Github的`gists`文件夹中。
+
++ [china_location_map](https://gist.github.com/cloudaice/5677947) 
++ [world_location_map](https://gist.github.com/cloudaice/5681176)
+
+
+匹配不到的再通过手动添加映射。
 
 
 TODO
