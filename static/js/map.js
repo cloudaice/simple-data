@@ -1,8 +1,14 @@
 $(document).ready(function(){
-    function load_china_map(select){
+
+    var polling = function(){
+        load_china_map('/chinamapajax', "#ChinaMap");
+        load_china_map("/chinamapajax", "#WorldMap");
+    }
+    interval = setInterval(polling, 1000);
+    function load_china_map(url, select){
         $.ajax({
             type: 'POST',
-            url: '/chinamap',
+            url: url,
             data: {"site": "Tornado-data"},
             dataType: "json",
             success: function(data){
@@ -10,6 +16,7 @@ $(document).ready(function(){
             }
         });
     }
+
 
     function fill_map(data, select){
         $(select).SVGMap({
@@ -22,6 +29,7 @@ $(document).ready(function(){
             mapHeight: 480
         });
     }
+
 
     var updater = function(url, select) {
         this.select = select;
@@ -50,10 +58,10 @@ $(document).ready(function(){
             }
         }
     }
-    var chinamapsocket = new updater("/chinamap", "#ChinaMap");
-    var worldmapsocket = new updater("/worldmap", "#WorldMap");
-    chinamapsocket.start();
-    worldmapsocket.start();
+    //var chinamapsocket = new updater("/chinamap", "#ChinaMap");
+    //var worldmapsocket = new updater("/worldmap", "#WorldMap");
+    //chinamapsocket.start();
+    //worldmapsocket.start();
 
 /*
     $('#WorldMap').SVGMap({
@@ -69,7 +77,6 @@ $(document).ready(function(){
     });
 */
 });
-    //load_china_map();
 /*
          {
         'heilongjiang': {'stateInitColor': 0, 'score': 0},

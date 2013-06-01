@@ -3,6 +3,11 @@ $(document).ready(function(){
         e.preventDefault();
         $(this).tab("show");
     })
+    var polling = function(){
+        load_table("/githubworld", "#world-table");
+        load_table("/githubchina", "#china-table");
+    }
+    interval = setInterval(polling, 1000);
 
     var updater = function(url, select) {
         this.select = select;
@@ -14,7 +19,7 @@ $(document).ready(function(){
             else if ("MozWebSocket" in window){
                 this.socket = new MozWebSocket(this.url);
             }
-            if (this.socket != null){
+            if (this.socket != nu"l){
                 var socket = this.socket;
                 var select = this.select;
                 socket.onmessage = function(event) {
@@ -31,10 +36,10 @@ $(document).ready(function(){
             }
         }
     }
-    var chinasocket = new updater("/socketchina", "#china-table");
-    var worldsocket = new updater("/socketworld", "#world-table");
-    chinasocket.start();
-    worldsocket.start();
+    //var chinasocket = new updater("/socketchina", "#china-table");
+    //var worldsocket = new updater("/socketworld", "#world-table");
+    //chinasocket.start();
+    //worldsocket.start();
 
     function fill_table(data, select){
         var github_table  = "<table class='table table-striped'><thead><tr>";
@@ -63,7 +68,7 @@ $(document).ready(function(){
         }
     }
 
-    function load_table(url){
+    function load_table(url, select){
         $.ajax({
             type: 'POST',
             url: url,
@@ -80,6 +85,4 @@ $(document).ready(function(){
             } 
         });
     }
-    //load_table("/githubworld");
-    //load_table("/githubchina");
 });

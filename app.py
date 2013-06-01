@@ -222,6 +222,18 @@ class WorldSocketbHandler(WebSocketHandler):
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
+class WorldMapAjaxHandler(web.RequestHandler):
+    @asynchronous
+    def post(self):
+        self.write(json.dumps(workers.world_map, indent=4, separators=(',', ': ')))
+
+
+class ChinaMapAjaxHandler(web.RequestHandler):
+    @asynchronous
+    def post(self):
+        self.write(json.dumps(workers.china_map, indent=4, separators=(',', ': ')))
+
+
 settings = {
     "static_path": os.path.join(os.path.dirname(__file__), 'static'),
     'template_path': os.path.join(os.path.dirname(__file__), 'template'),
@@ -236,6 +248,8 @@ handlers = [
     (r"/githubworld", GithubWorldHandler),
     (r"/chinamap", ChinaMapHandler),
     (r"/worldmap", WorldMapHandler),
+    (r"/worldmapajax", WorldMapAjaxHandler),
+    (r"/chinamapajax", ChinaMapAjaxHandler),
     (r"/about", AboutHandler),
     (r"/favicon.ico", web.StaticFileHandler, dict(path=settings["static_path"])),
 ]
