@@ -132,7 +132,7 @@ class WorldMapHandler(WebSocketHandler):
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
             
 
-class GithubChinaHandler(WebSocketHandler):
+class GithubChinaHandler(ApiHandler):
     @asynchronous
     @gen.coroutine
     def post(self):
@@ -222,16 +222,18 @@ class WorldSocketbHandler(WebSocketHandler):
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
-class WorldMapAjaxHandler(web.RequestHandler):
+class WorldMapAjaxHandler(ApiHandler):
     @asynchronous
     def post(self):
         self.write(json.dumps(workers.world_map, indent=4, separators=(',', ': ')))
+        self.finish()
 
 
-class ChinaMapAjaxHandler(web.RequestHandler):
+class ChinaMapAjaxHandler(ApiHandler):
     @asynchronous
     def post(self):
         self.write(json.dumps(workers.china_map, indent=4, separators=(',', ': ')))
+        self.finish()
 
 
 settings = {
