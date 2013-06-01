@@ -42,14 +42,14 @@ class ChinaMapHandler(WebSocketHandler):
 
     def open(self):
         ChinaMapHandler.handlers += 1
-        options.logger.info("chinamaps sockets is %d" % ChinaMapHandler.handlers)
+        options.logger.info("The numbers of chinamaps sockets is %d" %
+                            ChinaMapHandler.handlers)
         self.callback = None
-        options.logger.info("start chinamap websocket...")
         message = []
         self.write_message(json.dumps(message))
 
     def on_message(self, message):
-        options.logger.info('recieved message chinamap')
+        options.logger.info('recieved message from chinamap')
         message = escape.json_decode(message)
         self.check(message)
 
@@ -81,7 +81,7 @@ class ChinaMapHandler(WebSocketHandler):
     def on_close(self):
         ChinaMapHandler.handlers -= 1
         if self.callback:
-            options.logger.warning("remove chinamap timeout..")
+            options.logger.warning("remove chinamap callback")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
@@ -90,14 +90,14 @@ class WorldMapHandler(WebSocketHandler):
 
     def open(self):
         WorldMapHandler.handlers += 1
-        options.logger.info("worldmaps sockets is %d " % WorldMapHandler.handlers)
+        options.logger.info("The numbers of worldmaps sockets is %d " %
+                            WorldMapHandler.handlers)
         self.callback = None
-        options.logger.info("start worldmap websocket...")
         message = []
         self.write_message(json.dumps(message))
 
     def on_message(self, message):
-        options.logger.info("recieved message worldmap")
+        options.logger.info("recieved message from worldmap")
         message = escape.json_decode(message)
         self.check(message)
 
@@ -165,13 +165,13 @@ class ChinaSocketbHandler(WebSocketHandler):
 
     def open(self):
         ChinaSocketbHandler.handlers += 1
-        options.logger.info("china sockets is %d" % ChinaSocketbHandler.handlers)
+        options.logger.info(" The numbers of china sockets is %d" %
+                            ChinaSocketbHandler.handlers)
         self.callback = None
-        options.logger.info('start china websocket...')
         self.write_message(json.dumps(workers.github_china))
 
     def on_message(self, message):
-        options.logger.info('recieved message china')
+        options.logger.info('recieved message from china')
         message = escape.json_decode(message)
         self.check(message)
 
@@ -187,7 +187,7 @@ class ChinaSocketbHandler(WebSocketHandler):
     def on_close(self):
         ChinaSocketbHandler.handlers -= 1
         if self.callback:
-            options.logger.warning("remove china timeout..")
+            options.logger.warning("remove china users callback")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
         
 
@@ -196,13 +196,13 @@ class WorldSocketbHandler(WebSocketHandler):
 
     def open(self):
         WorldSocketbHandler.handlers += 1
-        options.logger.info("world sockets is %d" % WorldSocketbHandler.handlers)
+        options.logger.info("The numbers of world sockets is %d" %
+                            WorldSocketbHandler.handlers)
         self.callback = None
-        options.logger.info("start world websocket...")
         self.write_message(json.dumps(workers.github_world))
 
     def on_message(self, message):
-        options.logger.info("recieved world message")
+        options.logger.info("recieved message from world")
         message = escape.json_decode(message)
         self.check(message)
 
@@ -218,7 +218,7 @@ class WorldSocketbHandler(WebSocketHandler):
     def on_close(self):
         WorldSocketbHandler.handlers -= 1
         if self.callback:
-            options.logger.warning("remove world timeout..")
+            options.logger.warning("remove world users callback")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
