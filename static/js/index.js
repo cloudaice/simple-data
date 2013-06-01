@@ -7,8 +7,8 @@ $(document).ready(function(){
         load_table("/githubworld", "#world-table");
         load_table("/githubchina", "#china-table");
     }
-    polling();
-    interval = setInterval(polling, 10000);
+    //polling();
+    //interval = setInterval(polling, 10000);
 
     var updater = function(url, select) {
         this.select = select;
@@ -37,10 +37,10 @@ $(document).ready(function(){
             }
         }
     }
-    //var chinasocket = new updater("/socketchina", "#china-table");
-    //var worldsocket = new updater("/socketworld", "#world-table");
-    //chinasocket.start();
-    //worldsocket.start();
+    var chinasocket = new updater("/socketchina", "#china-table");
+    var worldsocket = new updater("/socketworld", "#world-table");
+    chinasocket.start();
+    worldsocket.start();
 
     function fill_table(data, select){
         var github_table  = "<table class='table table-striped'><thead><tr>";

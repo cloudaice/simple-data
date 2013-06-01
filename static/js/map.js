@@ -4,8 +4,8 @@ $(document).ready(function(){
         load_china_map('/chinamapajax', "#ChinaMap");
         load_china_map("/worldmapajax", "#WorldMap");
     }
-    polling();
-    interval = setInterval(polling, 10000);
+    //polling();
+    //interval = setInterval(polling, 10000);
     function load_china_map(url, select){
         $.ajax({
             type: 'POST',
@@ -59,10 +59,10 @@ $(document).ready(function(){
             }
         }
     }
-    //var chinamapsocket = new updater("/chinamap", "#ChinaMap");
-    //var worldmapsocket = new updater("/worldmap", "#WorldMap");
-    //chinamapsocket.start();
-    //worldmapsocket.start();
+    var chinamapsocket = new updater("/chinamap", "#ChinaMap");
+    var worldmapsocket = new updater("/worldmap", "#WorldMap");
+    chinamapsocket.start();
+    worldmapsocket.start();
 
 /*
     $('#WorldMap').SVGMap({
