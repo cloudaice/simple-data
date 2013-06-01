@@ -2,9 +2,9 @@ $(document).ready(function(){
 
     var polling = function(){
         load_china_map('/chinamapajax', "#ChinaMap");
-        load_china_map("/chinamapajax", "#WorldMap");
-        console.debug("request");
+        load_china_map("/worldmapajax", "#WorldMap");
     }
+    polling();
     interval = setInterval(polling, 10000);
     function load_china_map(url, select){
         $.ajax({
@@ -13,7 +13,6 @@ $(document).ready(function(){
             data: {"site": "Tornado-data"},
             dataType: "json",
             success: function(data){
-                console.debug("hello");
                 fill_map(data, select);
             }
         });
