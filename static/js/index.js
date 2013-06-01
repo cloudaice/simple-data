@@ -7,7 +7,7 @@ $(document).ready(function(){
         load_table("/githubworld", "#world-table");
         load_table("/githubchina", "#china-table");
     }
-    interval = setInterval(polling, 1000);
+    interval = setInterval(polling, 10000);
 
     var updater = function(url, select) {
         this.select = select;
