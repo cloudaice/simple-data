@@ -117,7 +117,7 @@ def commit(url, message, data):
 def update_file(gist_url, filename, data):
     try:
         body = json.dumps({
-            "description": "update file at %s" %
+            "description": "update file at utctime %s" %
                            datetime.datetime.utcfromtimestamp(time.time()),
             "files": {
                 filename: {
