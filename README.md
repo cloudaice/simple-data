@@ -11,7 +11,7 @@ Github用户活跃度排名
 
 + 中国大陆地区Github用户活跃度排名
 
-+ 世界Github用户排名
++ 世界范围内Github用户活跃度排名
 
 
 
@@ -20,7 +20,7 @@ Github用户活跃度排名
 
 + Python Tornado 框架，利用gen模块的coroune异步抓取数据
 
-+ 结合使用Github API 搜索前followers前1000的用户, 结合网页抓取。
++ 使用`Github API`搜索followers前1000的用户, 结合网页抓取获取用户信息。
 
 + 部署在heroku上
 
@@ -65,7 +65,8 @@ TODO
 
 **注**: 由于heroku不支持websocket，因此在线服务版本始终为websocket以前的版本。
 目前在寻找免费的支持websocket的云平台。
-如果打不开，请使用梯子。
+
+另外如果网站打不开，请使用梯子。
 
 
 
