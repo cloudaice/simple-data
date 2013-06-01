@@ -19,7 +19,7 @@ $(document).ready(function(){
             else if ("MozWebSocket" in window){
                 this.socket = new MozWebSocket(this.url);
             }
-            if (this.socket != nu"l){
+            if (this.socket != null){
                 var socket = this.socket;
                 var select = this.select;
                 socket.onmessage = function(event) {
