@@ -12,7 +12,6 @@ import tornado.log
 from tornado.websocket import WebSocketHandler
 from libs.geo import GeoFetch
 from tornado.httpclient import AsyncHTTPClient
-from test import Get
 
 github_data = {}
 parse_config_file("config.py")
@@ -225,14 +224,44 @@ class WorldSocketbHandler(WebSocketHandler):
 class WorldMapAjaxHandler(ApiHandler):
     @asynchronous
     def post(self):
-        self.write(json.dumps(workers.world_map, indent=4, separators=(',', ': ')))
+        world_map = workers.world_map.copy()
+
+        for country_code in world_map:
+            if world_map[country_code]["score"] > 0 and world_map[country_code]["score"] < 5:
+                world_map[country_code]["stateInitColor"] = 5
+            elif world_map[country_code]["score"] >= 5 and world_map[country_code]["score"] < 10:
+                world_map[country_code]["stateInitColor"] = 4
+            elif world_map[country_code]["score"] >= 10 and world_map[country_code]["score"] < 50:
+                world_map[country_code]["stateInitColor"] = 3
+            elif world_map[country_code]["score"] >= 50 and world_map[country_code]["score"] < 100:
+                world_map[country_code]["stateInitColor"] = 2
+            elif world_map[country_code]["score"] >= 100 and world_map[country_code]["score"] < 200:
+                world_map[country_code]["stateInitColor"] = 1
+            elif world_map[country_code]["score"] >= 200:
+                world_map[country_code]["stateInitColor"] = 0
+        self.write(json.dumps(world_map, indent=4, separators=(',', ': ')))
         self.finish()
 
 
 class ChinaMapAjaxHandler(ApiHandler):
     @asynchronous
     def post(self):
-        self.write(json.dumps(workers.china_map, indent=4, separators=(',', ': ')))
+        china_map = workers.china_map.copy()
+
+        for city in china_map:
+            if china_map[city]['score'] > 0 and china_map[city]['score'] < 5:
+                china_map[city]['stateInitColor'] = 5
+            elif china_map[city]['score'] >= 5 and china_map[city]['score'] < 10:
+                china_map[city]['stateInitColor'] = 4
+            elif china_map[city]['score'] >= 10 and china_map[city]['score'] < 50:
+                china_map[city]['stateInitColor'] = 3
+            elif china_map[city]['score'] >= 50 and china_map[city]['score'] < 100:
+                china_map[city]['stateInitColor'] = 2
+            elif china_map[city]['score'] >= 100 and china_map[city]['score'] < 200:
+                china_map[city]['stateInitColor'] = 1
+            elif china_map[city]['score'] >= 200:
+                china_map[city]['stateInitColor'] = 0
+        self.write(json.dumps(china_map, indent=4, separators=(',', ': ')))
         self.finish()
 
 
