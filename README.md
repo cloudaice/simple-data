@@ -74,8 +74,21 @@ TODO
 
 
 
-应用地址
+Demo
 --------
+
++ 中国用户分布图
+
+![Github-china](http://cloudaice.com/images/Github-china.png)
+
+
+
++ 世界用户分布图
+
+![Github-world](http://cloudaice.com/images/Github-world.png)
+
+
++ 应用地址
 
 [data.cloudaice.com](http://data.cloudaice.com)。
 
