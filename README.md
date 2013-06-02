@@ -93,7 +93,7 @@ Demo
 [data.cloudaice.com](http://data.cloudaice.com)。
 
 
-**注**: 由于heroku不支持websocket，因此在线服务版本始终为websocket以前的版本。
+**注**: 由于heroku不支持websocket，因此在线服务版本为ajax轮询版本。
 目前在寻找免费的支持websocket的云平台。
 
 另外如果网站打不开，请使用梯子。
