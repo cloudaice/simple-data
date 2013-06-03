@@ -63,6 +63,19 @@ Score:
 匹配不到的再通过手动添加映射。
 
 
+运行
+---
+
+clone该项目，在项目的根目录下创建config.py文件，编辑内容如下:
+
+    from tornado.options import define
+
+    define("username", "your-github-username")
+    define("password", "your-github-password")
+
+在根目录下执行 `python app.py`，然后访问浏览器`localhost:8000`
+
+
 TODO
 ----
 
