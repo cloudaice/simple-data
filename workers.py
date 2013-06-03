@@ -8,6 +8,7 @@ from tornado.options import options
 import tornado.ioloop
 from libs.client import GetPage, sync_loop_call, formula, update_file
 from libs.geo import match_geoname, match_world_geoname
+import time
 
 
 #parse_config_file("config.py")
@@ -170,12 +171,14 @@ def update_china_location():
                                      (resp.code, resp.message))
         else:
             options.logger.error("Get gist error %d, %s" % (resp.code, resp.message))
-    else:  # update location_map file
-        resp = yield update_file(options.api_url + options.location_map_gist,
-                                 "location_map.json",
-                                 china_location_map)
-        if resp.code != 200:
-            options.logger.error("update gists error %d, %s" % (resp.code, resp.message))
+    else:  # update location_map file every hour
+        if int(time.time()) % 3600 == 0:
+            resp = yield update_file(options.api_url + options.location_map_gist,
+                                     "location_map.json",
+                                     china_location_map)
+            if resp.code != 200:
+                options.logger.error("update gists error %d, %s" % (resp.code, resp.message))
+
     temp_china_map = {}
     for city in options.city_list:
         temp_china_map[city] = {"score": 0, "stateInitColor": 6}
@@ -224,13 +227,14 @@ def update_world_location():
             options.logger.error("Get gist error %d, %s" %
                                  (resp.code, resp.message))
 
-    else:  # update world_location_map file
-        resp = yield update_file(options.api_url + options.world_location_map_gist,
-                                 "world_location_map.json",
-                                 world_location_map)
-        if resp.code != 200:
-            options.logger.error("update gists error %d, %s" %
-                                (resp.code, resp.message))
+    else:  # update world_location_map file every hour
+        if int(time.time()) % 3600 == 0:
+            resp = yield update_file(options.api_url + options.world_location_map_gist,
+                                     "world_location_map.json",
+                                     world_location_map)
+            if resp.code != 200:
+                options.logger.error("update gists error %d, %s" %
+                                    (resp.code, resp.message))
 
     temp_world_map = {}
     for country_code in options.country_code_list:
