@@ -153,7 +153,7 @@ def search_world(page):
     raise gen.Return(resp)
 
 
-@sync_loop_call(50 * 1000)
+@sync_loop_call(60 * 1000)
 @gen.coroutine
 def update_china_location():
     global china_location_map
@@ -172,7 +172,7 @@ def update_china_location():
         else:
             options.logger.error("Get gist error %d, %s" % (resp.code, resp.message))
     else:  # update location_map file every hour
-        if int(time.time()) % 3600 == 0:
+        if int(time.time()) % 36000 < 60:
             resp = yield update_file(options.api_url + options.location_map_gist,
                                      "location_map.json",
                                      china_location_map)
@@ -206,7 +206,7 @@ def update_china_location():
     china_map = temp_china_map.copy()
 
 
-@sync_loop_call(50 * 1000)
+@sync_loop_call(60 * 1000)
 @gen.coroutine
 def update_world_location():
     options.logger.info("start update world_location")
@@ -228,7 +228,7 @@ def update_world_location():
                                  (resp.code, resp.message))
 
     else:  # update world_location_map file every hour
-        if int(time.time()) % 3600 == 0:
+        if int(time.time()) % 36000 < 60:
             resp = yield update_file(options.api_url + options.world_location_map_gist,
                                      "world_location_map.json",
                                      world_location_map)
