@@ -267,4 +267,5 @@ if __name__ == "__main__":
     update_china_user()
     update_world_user()
     update_china_location()
+    update_world_location()
     tornado.ioloop.IOLoop.instance().start()
