@@ -8,7 +8,7 @@ $(document).ready(function(){
         load_table("/githubchina", "#china-table");
     }
     //polling();
-    //interval = setInterval(polling, 10000);
+    //interval = setInterval(polling, 60000);
 
     var updater = function(url, select) {
         this.select = select;
