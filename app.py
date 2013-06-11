@@ -80,7 +80,7 @@ class ChinaMapHandler(WebSocketHandler):
     def on_close(self):
         ChinaMapHandler.handlers -= 1
         if self.callback:
-            options.logger.warning("remove chinamap callback")
+            options.logger.warning("remove chinamap callback handler")
             tornado.ioloop.IOLoop.instance().remove_timeout(self.callback)
 
 
