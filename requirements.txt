@@ -1,4 +1,2 @@
 pycurl==7.19.0
 tornado==3.0.1
-wsgiref==0.1.2
-gunicorn==0.17.2
